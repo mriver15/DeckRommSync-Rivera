@@ -1,224 +1,269 @@
 # DeckRommSync-Rivera
 
-DeckRommSync-Rivera is an enhanced ROM synchronization tool that automatically syncs your ROMs from [RomM](https://github.com/rommapp/romm) to your Steam Deck with intelligent platform matching, real-time status monitoring, and concurrent downloads.
+**Automated ROM synchronization from [RomM](https://github.com/rommapp/romm) to Steam Deck**
 
 ![DeckRomMSync](/docs/deckrommsync.png)
 
-**Author:** Michael Rivera  
-**Inspired by:** [PeriBluGaming's DeckRommSync-Standalone](https://github.com/PeriBluGaming/DeckRommSync-Standalone)
+Sync your ROM collection from RomM server to Steam Deck with intelligent platform matching, OAuth2 authentication, save file sync, and real-time monitoring.
 
-## ✨ Features
-
-### Core Functionality
-- ✅ Automatic ROM synchronization from RomM to Steam Deck
-- ✅ Smart platform matching with 70+ preset folder names
-- ✅ Collection-based sync control
-- ✅ Concurrent downloads (configurable worker threads)
-- ✅ Background worker with scheduled syncing
-- ✅ Manual sync trigger - sync on demand
-
-### User Interface
-- ✅ Modern web UI with dark/light themes
-- ✅ Real-time sync status with animated spinner
-- ✅ Live progress tracking (success/pending/errors)
-- ✅ Statistics dashboard with sync history
-- ✅ Toast notifications for user feedback
-- ✅ Folder picker for easy path selection
-
-### Developer Features
-- ✅ Debug mode for testing without downloads
-- ✅ Comprehensive test suite (139 tests)
-- ✅ Thread-safe database operations
-- ✅ Input validation and error handling
-- ✅ Detailed logging system
-
-## 🚀 Installation
-
-1. Clone the Repository to your Steam Deck
-   ```bash
-   git clone https://github.com/mriver15/DeckRommSync-Rivera.git
-   cd DeckRommSync-Rivera
-   ```
-
-2. Create and activate a virtual environment
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-3. Install Requirements
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. (Optional) Adjust settings in `config.json`:
-   - Server port (default: 5000)
-   - Max workers for concurrent downloads (default: 8)
-   - Debug mode settings
-
-## ⚙️ Configuration
-
-### Starting the Application
-
-Make sure the virtual environment is activated:
-```bash
-source venv/bin/activate
-python3 app.py
-```
-
-Access the web interface at `http://{steamdeck-ip}:5000`
-
-### Initial Setup
-
-#### 1. RomM API Settings
-Navigate to the **Config** page and configure:
-
-- **RomM API URL:** `http://{romm-ip}:{romm-port}/api`
-- **Username:** Your RomM username
-- **Password:** Your RomM password
-
-Click **Save Settings**. The background worker will sync platforms and collections within 1 minute (or click **Sync Now** on the Status page for immediate sync).
-
-#### 2. Platform Matching
-
-**Steam Deck System Path:** Click **Browse** or enter the path to your RetroDECK roms directory (e.g., `/home/deck/retrodeck/roms/`)
-
-**Platform Folders:** Platform folder names are now **automatically populated** with common defaults:
-- PlayStation → `psx`
-- Nintendo 64 → `n64`
-- Game Boy Advance → `gba`
-- Nintendo DS → `nds`
-- And 70+ more...
-
-You can customize any folder name as needed and click **Save** for that platform.
-
-![Platform-Matching](/docs/platform_matching.png)
-
-#### 3. Activate Collection Sync
-
-In the **Sync Collections** section:
-1. Check the boxes next to collections you want to sync
-2. Click **Save Collections**
-3. Click **Sync Now** on the Status page or wait for automatic sync
-
-Collections will maintain their enabled/disabled state across syncs.
-
-## 📊 Statistics Dashboard
-
-Access `/stats` to view:
-- Total ROMs synced vs pending vs errors
-- Success rate percentage
-- Estimated disk space usage
-- Per-platform breakdown
-- Per-collection statistics
-- Recent sync history with timestamps
-
-## 🐛 Debug Mode
-
-Debug mode allows testing without downloading ROM files - perfect for configuration validation.
-
-### Enable Debug Mode
-
-Edit `config.json`:
-```json
-{
-    "debug": {
-        "enabled": true,
-        "output_folder": "./debug_output"
-    },
-    "sync": {
-        "max_workers": 8
-    }
-}
-```
-
-### What Debug Mode Does
-
-- Saves ROM metadata as JSON files instead of downloading
-- Organizes files by platform folder structure
-- Tests platform matching configuration
-- Validates folder permissions
-- Minimal disk usage and bandwidth
-
-### Example Output
-
-```text
-debug_output/
-├── psx/
-│   ├── Final_Fantasy_VII_123.json
-│   └── Metal_Gear_Solid_456.json
-├── n64/
-│   └── Super_Mario_64_789.json
-└── gba/
-    └── Pokemon_FireRed_101.json
-```
-
-See [DEBUG_MODE.md](DEBUG_MODE.md) for complete documentation.
-
-## 🔄 Real-Time Sync Status
-
-The Status page shows:
-- **Sync spinner** - Animated during active sync
-- **Current step** - What the sync process is doing
-- **Progress metrics** - Live counts of synced/pending/error ROMs
-- **Progress bar** - Visual percentage of completion
-- **Sync Now button** - Trigger manual sync immediately
-- **Last update timestamp** - When status was last refreshed
-
-Status updates every 2 seconds automatically.
-
-## 🛠️ Performance Tuning
-
-### Concurrent Downloads
-
-Adjust `max_workers` in `config.json` to control parallel downloads:
-
-```json
-{
-    "sync": {
-        "max_workers": 8  // 4-8 recommended, higher = faster but more resources
-    }
-}
-```
-
-### Scheduled Sync Interval
-
-The background worker runs every 1 minute by default. To change this, modify `app.py`:
-
-```python
-scheduler.add_job(run_background_task, "interval", minutes=5)  # Change to 5 minutes
-```
-
-## 🧪 Testing
-
-Run the comprehensive test suite:
-
-```bash
-pytest tests/ -v
-```
-
-All 139 tests validate:
-- Database operations
-- API interactions
-- Input validation
-- Error handling
-- Thread safety
-- Debug mode functionality
-- Duplicate handling
-
-## 📝 License
-
-See [LICENSE.md](LICENSE.md)
-
-## 🙏 Acknowledgments
-
-This project is inspired by and builds upon [PeriBluGaming's DeckRommSync-Standalone](https://github.com/PeriBluGaming/DeckRommSync-Standalone). Special thanks to the original author for the foundation that made this enhanced version possible.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
+**Author:** Michael Rivera | **License:** MIT (No Selling)
 
 ---
 
-**Developed by Michael Rivera**  
-**Built for the Steam Deck and RetroDECK community**
+## ⚡ Quick Start
+
+### 1. Install
+```bash
+git clone https://github.com/mriver15/DeckRommSync-Rivera.git
+cd DeckRommSync-Rivera
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Configure
+```bash
+python app.py
+# Open http://localhost:5000 in browser
+```
+
+**Config Page:**
+- RomM API URL: `http://your-romm-server:8080/api`
+- Authentication: Choose OAuth2 (RomM v4.4.0+) or Basic Auth
+- Platform Matching: Map RomM platforms to RetroDECK folders
+- Collections: Enable collections to sync
+
+### 3. Sync
+Click **Sync Now** on Status page or wait for automatic sync (runs every minute)
+
+---
+
+## ✨ Features
+
+### Core
+- ✅ **OAuth2 Authentication** - Secure token-based auth for RomM v4.4.0+
+- ✅ **Bidirectional Save Sync** - Sync save files & save states between RomM and Steam Deck
+- ✅ **Smart Platform Matching** - 70+ preset platform folder mappings
+- ✅ **Collection-Based Sync** - Choose which collections to sync
+- ✅ **Concurrent Downloads** - Parallel ROM downloads (configurable threads)
+- ✅ **Real-Time Status** - Live sync progress with interactive UI
+
+### UI
+- ✅ **Modern Web Interface** - Responsive design with dark theme
+- ✅ **Three View Modes** - Grid, List, Compact views for ROM library
+- ✅ **Interactive ROM Cards** - Click for details, save counts, status badges
+- ✅ **Statistics Dashboard** - Track sync history, disk space, success rates
+- ✅ **Debug Mode** - Test configurations without downloading files
+
+---
+
+## 📖 Documentation
+
+### User Guides
+- **[OAuth Setup](docs/implementation/OAUTH_IMPLEMENTATION.md)** - RomM v4.4.0+ authentication
+- **[Save Sync](docs/implementation/SAVE_SYNC_IMPLEMENTATION.md)** - Bidirectional save file synchronization
+- **[Debug Mode](docs/implementation/DEBUG_MODE.md)** - Testing without downloads
+
+### Advanced
+- **[Feature Analysis](docs/implementation/FEATURES_AND_ANALYSIS.md)** - Complete feature documentation
+- **[Recommended Improvements](docs/implementation/IMPROVEMENTS.md)** - Enhancement roadmap
+
+---
+
+## 🎮 Use Cases
+
+**Portable Gaming:** Play on RomM server (EmulatorJS), continue on Steam Deck with synced saves
+
+**Multi-Device:** Keep ROMs and saves synchronized across multiple devices
+
+**Backup:** Automatic cloud backup of save files to RomM server
+
+**Library Management:** Centralized ROM collection with selective sync
+
+---
+
+## 🛠️ Configuration
+
+### config.json
+```json
+{
+  "server": { "port": 5000 },
+  "sync": { "max_workers": 8 },
+  "oauth": {
+    "enabled": true,
+    "scopes": ["platforms.read", "roms.read", "collections.read", "assets.write"]
+  },
+  "debug": { "enabled": false }
+}
+```
+
+### Environment Variables
+```bash
+ROMMSYNC_PORT=5000
+ROMMSYNC_DEBUG=false
+```
+
+---
+
+## 📊 Status Page
+
+**Compact Sync Bar** - Real-time stats: success/pending/error/total ROMs
+
+**Three View Modes:**
+- **Grid:** Card view with cover art and status badges
+- **List:** Detailed rows with platform info and save counts
+- **Compact:** Dense table view for large libraries
+
+**Interactive Features:**
+- Click ROM to view details and save files
+- Search and filter by status
+- Real-time updates (2-second polling)
+- Reset sync status per ROM
+
+---
+
+## 🔐 OAuth2 Authentication
+
+**RomM v4.4.0+ (Recommended):**
+- Secure token-based authentication
+- Automatic token refresh (30-min access, 7-day refresh)
+- Scope-based permissions
+- No password in every request
+
+**Backward Compatible:**
+- Basic Auth still supported for older RomM versions
+- Toggle in Config UI
+
+**Required Scopes:**
+- `platforms.read` - Platform data
+- `roms.read` - ROM downloads
+- `collections.read` - Collection info
+- `assets.write` - Save file uploads
+
+---
+
+## 💾 Save File Sync
+
+**Bidirectional Sync:**
+- Download saves from RomM to Steam Deck
+- Upload Steam Deck saves to RomM
+- Automatic conflict resolution (newest wins)
+
+**Supported:**
+- Save files (.srm, .sav)
+- Save states (quick saves)
+- Multiple emulators (RetroArch, standalone)
+
+**Database Tracking:**
+- Sync history with timestamps
+- Per-ROM save counts
+- Error tracking and logging
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Test coverage
+pytest tests/ --cov=classes --cov-report=html
+
+# Debug mode (no downloads)
+# Set debug.enabled=true in config.json
+```
+
+**139 Tests Cover:**
+- Database operations
+- OAuth token management
+- Save file sync logic
+- Platform matching
+- Error handling
+
+---
+
+## 📈 Performance
+
+**Optimized Downloads:**
+- Concurrent downloads (8 workers default)
+- Chunked file transfers
+- Resume support
+
+**Recommended Settings:**
+- Max workers: 4-8 (balance speed vs resources)
+- Sync interval: 1-5 minutes
+- Debug mode: Enable for testing configs
+
+**Benchmarks:**
+- 100 ROMs: ~10-20 minutes (network dependent)
+- Save sync: ~100ms per save file
+- OAuth token refresh: ~200ms every 25 minutes
+
+---
+
+## 🚀 Deployment
+
+### Steam Deck (Native)
+```bash
+source venv/bin/activate
+python app.py
+# Access at http://steamdeck.local:5000
+```
+
+### Docker (Planned)
+```bash
+docker-compose up -d
+```
+
+### Systemd Service (Optional)
+```bash
+sudo cp deckrommsync.service /etc/systemd/system/
+sudo systemctl enable deckrommsync
+sudo systemctl start deckrommsync
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create feature branch
+3. Add tests for new features
+4. Submit pull request
+
+**Development:**
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+pytest tests/
+```
+
+---
+
+## 📝 License
+
+MIT License (No Selling) - See [LICENSE.md](LICENSE.md)
+
+---
+
+## 🙏 Acknowledgments
+
+Inspired by [PeriBluGaming's DeckRommSync-Standalone](https://github.com/PeriBluGaming/DeckRommSync-Standalone)
+
+Built for the Steam Deck and RetroDECK community
+
+---
+
+## 📞 Support
+
+**Issues:** [GitHub Issues](https://github.com/mriver15/DeckRommSync-Rivera/issues)
+
+**Logs:** Check `background_worker.log` and `system.log`
+
+**Community:** Steam Deck Discord, RetroDECK Discord
+
+---
+
+**Developed by Michael Rivera** | **Version 2.0.0** | **Updated: November 2025**
