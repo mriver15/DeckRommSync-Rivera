@@ -31,6 +31,8 @@ class BackgroundWorker:
             self.romMAPIBaseUrl = None
             self.romMUsername = None
             self.romMPassword = None
+            self.use_oauth = False
+            self.oauth_scopes = []
             
             for config in configObj:            
                 if config['config_key'] == 'romm_api_base_url':
@@ -39,6 +41,10 @@ class BackgroundWorker:
                     self.romMUsername = config['config_value']
                 elif config['config_key'] == 'romm_password':
                     self.romMPassword = config['config_value']
+                elif config['config_key'] == 'use_oauth':
+                    self.use_oauth = config['config_value'] == '1' or config['config_value'] == 'true'
+                elif config['config_key'] == 'oauth_scopes':
+                    self.oauth_scopes = config['config_value'].split(',') if config['config_value'] else []
             
             # Validate configuration
             if not all([self.romMAPIBaseUrl, self.romMUsername, self.romMPassword]):
@@ -152,10 +158,29 @@ class BackgroundWorker:
         self.background_logger.info("Syncing RomM Collections - Starting")
         
         try:
-            # Create API helper with logger
-            romm = RommAPIHelper(self.romMAPIBaseUrl, logger=self.background_logger)
-            romm.login(self.romMUsername, self.romMPassword)
             db = DeckRommSyncDatabase(self.dbName)
+            
+            # Create API helper with database for token management
+            romm = RommAPIHelper(
+                api_base_url=self.romMAPIBaseUrl,
+                logger=self.background_logger,
+                db=db
+            )
+            
+            # Login using OAuth or Basic Auth
+            if self.use_oauth:
+                romm.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=True,
+                    scopes=self.oauth_scopes or ['platforms.read', 'roms.read', 'collections.read']
+                )
+            else:
+                romm.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=False
+                )
 
             # Read Platforms from RomM
             platform_result = romm.getPlatforms()
@@ -321,6 +346,29 @@ class BackgroundWorker:
             if not steamdeck_path:
                 self.background_logger.error("Steam Deck path is empty")
                 return
+            
+            # Create API helper with database
+            romm = RommAPIHelper(
+                api_base_url=self.romMAPIBaseUrl,
+                timeout=60,
+                logger=self.background_logger,
+                db=db
+            )
+            
+            # Login using OAuth or Basic Auth
+            if self.use_oauth:
+                romm.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=True,
+                    scopes=self.oauth_scopes or ['platforms.read', 'roms.read', 'collections.read']
+                )
+            else:
+                romm.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=False
+                )
             
             # DEBUG: Set Steamdeck Path manually
             # steamdeck_path = "./output/"
@@ -515,4 +563,370 @@ class BackgroundWorker:
             
         except Exception as e:
             self.background_logger.error(f"Failed to save ROM metadata: {e}")
-            return False 
+            return False
+    
+    def sync_save_files(self):
+        """
+        Synchronize save files between RomM and Steam Deck.
+        Implements bidirectional sync with conflict resolution (newest wins).
+        """
+        self.background_logger.info("========== Save File Sync Started ==========")
+        
+        try:
+            db = DeckRommSyncDatabase(self.dbName)
+            
+            # Check if save sync is enabled
+            save_sync_config = db.select_as_dict("config", where="config_key = 'enable_save_sync'")
+            if not save_sync_config or save_sync_config[0].get('config_value') != '1':
+                self.background_logger.info("Save sync is disabled in configuration")
+                return
+            
+            # Create sync history record
+            sync_start = datetime.now().isoformat()
+            db.insert("save_sync_history", 
+                     ["sync_type", "started_at", "status"],
+                     ("saves", sync_start, "running"))
+            
+            # Get the sync history ID
+            history = db.select_as_dict("save_sync_history", order_by="id DESC", limit=1)
+            history_id = history[0]['id'] if history else None
+            
+            # Get Steam Deck RetroDeck path
+            steamdeck_path_config = db.select_as_dict("config", where="config_key = 'steamdeck_retrodeck_path'")
+            if not steamdeck_path_config:
+                self.background_logger.error("Steam Deck RetroDeck path not configured")
+                return
+            
+            steamdeck_base_path = steamdeck_path_config[0]['config_value']
+            
+            # Create API helper with database
+            api = RommAPIHelper(
+                api_base_url=self.romMAPIBaseUrl,
+                timeout=60,
+                logger=self.background_logger,
+                db=db
+            )
+            
+            # Login using OAuth or Basic Auth
+            if self.use_oauth:
+                api.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=True,
+                    scopes=self.oauth_scopes or [
+                        'platforms.read',
+                        'roms.read',
+                        'collections.read',
+                        'assets.read',
+                        'assets.write'
+                    ]
+                )
+            else:
+                api.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=False
+                )
+            
+            # Create API helper with database
+            api = RommAPIHelper(
+                api_base_url=self.romMAPIBaseUrl,
+                timeout=60,
+                logger=self.background_logger,
+                db=db
+            )
+            
+            # Login using OAuth or Basic Auth
+            if self.use_oauth:
+                api.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=True,
+                    scopes=self.oauth_scopes or [
+                        'platforms.read',
+                        'roms.read',
+                        'collections.read',
+                        'assets.read',
+                        'assets.write'
+                    ]
+                )
+            else:
+                api.login(
+                    username=self.romMUsername,
+                    password=self.romMPassword,
+                    use_oauth=False
+                )
+            
+            # Get all synced ROMs
+            synced_roms = db.select_as_dict("roms", where="sync_status = 1")
+            self.background_logger.info(f"Found {len(synced_roms)} synced ROMs to check for saves")
+            
+            total_saves = 0
+            downloaded = 0
+            uploaded = 0
+            conflicts = 0
+            errors = 0
+            
+            # Create RomM API Helper
+            romm = RommAPIHelper(self.romMAPIBaseUrl, logger=self.background_logger)
+            romm.login(self.romMUsername, self.romMPassword)
+            
+            for rom in synced_roms:
+                rom_id = rom['roms_id']
+                rom_name = rom['name']
+                
+                try:
+                    # Get saves from RomM for this ROM
+                    remote_saves = romm.getSavesByRomID(rom_id)
+                    
+                    if remote_saves is None:
+                        continue
+                    
+                    if not remote_saves:
+                        self.background_logger.debug(f"No saves found for ROM: {rom_name}")
+                        continue
+                    
+                    total_saves += len(remote_saves)
+                    
+                    for save in remote_saves:
+                        try:
+                            save_result = self._sync_single_save(
+                                db, romm, rom, save, steamdeck_base_path
+                            )
+                            
+                            if save_result == 'downloaded':
+                                downloaded += 1
+                            elif save_result == 'uploaded':
+                                uploaded += 1
+                            elif save_result == 'conflict':
+                                conflicts += 1
+                            elif save_result == 'error':
+                                errors += 1
+                                
+                        except Exception as e:
+                            self.background_logger.error(f"Error syncing save {save.get('id')}: {e}")
+                            errors += 1
+                            
+                except Exception as e:
+                    self.background_logger.error(f"Error processing saves for ROM {rom_id}: {e}")
+                    errors += 1
+            
+            # Update sync history
+            sync_end = datetime.now().isoformat()
+            if history_id:
+                db.update("save_sync_history",
+                         {
+                             "completed_at": sync_end,
+                             "total_saves": total_saves,
+                             "downloaded": downloaded,
+                             "uploaded": uploaded,
+                             "conflicts": conflicts,
+                             "errors": errors,
+                             "status": "completed"
+                         },
+                         "id = ?",
+                         (history_id,))
+            
+            self.background_logger.info(f"========== Save File Sync Completed ==========")
+            self.background_logger.info(f"Total: {total_saves} | Downloaded: {downloaded} | Uploaded: {uploaded} | Conflicts: {conflicts} | Errors: {errors}")
+            
+        except Exception as e:
+            self.background_logger.error(f"Save file sync failed: {e}")
+    
+    def _sync_single_save(self, db: DeckRommSyncDatabase, romm: RommAPIHelper, 
+                          rom: dict, save: dict, steamdeck_base_path: str) -> str:
+        """
+        Sync a single save file with conflict resolution.
+        
+        Returns:
+            'downloaded', 'uploaded', 'conflict', 'skipped', or 'error'
+        """
+        rom_id = rom['roms_id']
+        save_id = save.get('id')
+        emulator = save.get('emulator', 'unknown')
+        file_name = save.get('file_name')
+        remote_updated_at = save.get('updated_at')
+        
+        # Get save path
+        local_path = self._get_save_path(rom, save, steamdeck_base_path)
+        
+        if not local_path:
+            self.background_logger.error(f"Could not determine save path for ROM {rom_id}")
+            return 'error'
+        
+        # Check if we have a database record for this save
+        existing_save = db.select_as_dict(
+            "rom_saves",
+            where="rom_id = ? AND file_name = ?",
+            condition_values=(rom_id, file_name)
+        )
+        
+        # Check if local file exists
+        local_exists = os.path.exists(local_path)
+        
+        if local_exists and existing_save:
+            # Compare timestamps to determine conflict
+            local_mtime = datetime.fromtimestamp(os.path.getmtime(local_path))
+            remote_mtime = datetime.fromisoformat(remote_updated_at.replace('Z', '+00:00'))
+            
+            # Get last sync time
+            last_sync = existing_save[0].get('last_sync_at')
+            if last_sync:
+                last_sync_dt = datetime.fromisoformat(last_sync)
+                
+                # Check if local file was modified after last sync
+                local_modified_after_sync = local_mtime > last_sync_dt
+                remote_modified_after_sync = remote_mtime > last_sync_dt
+                
+                if local_modified_after_sync and remote_modified_after_sync:
+                    # Conflict: both modified since last sync - newest wins
+                    self.background_logger.warning(
+                        f"Conflict detected for save {file_name} - using newest version"
+                    )
+                    
+                    if local_mtime > remote_mtime:
+                        # Upload local version
+                        result = romm.uploadSave(rom_id, local_path, emulator)
+                        if result:
+                            self._update_save_record(db, rom_id, save_id, save, local_path, 'upload')
+                            return 'uploaded'
+                        return 'error'
+                    else:
+                        # Download remote version
+                        if romm.downloadSave(save_id, local_path):
+                            self._update_save_record(db, rom_id, save_id, save, local_path, 'download')
+                            return 'downloaded'
+                        return 'error'
+                
+                elif local_modified_after_sync:
+                    # Only local modified - upload
+                    result = romm.uploadSave(rom_id, local_path, emulator)
+                    if result:
+                        self._update_save_record(db, rom_id, save_id, save, local_path, 'upload')
+                        return 'uploaded'
+                    return 'error'
+                    
+                elif remote_modified_after_sync:
+                    # Only remote modified - download
+                    if romm.downloadSave(save_id, local_path):
+                        self._update_save_record(db, rom_id, save_id, save, local_path, 'download')
+                        return 'downloaded'
+                    return 'error'
+                else:
+                    # Neither modified - skip
+                    return 'skipped'
+            else:
+                # No last sync record - compare timestamps directly
+                if local_mtime > remote_mtime:
+                    result = romm.uploadSave(rom_id, local_path, emulator)
+                    if result:
+                        self._update_save_record(db, rom_id, save_id, save, local_path, 'upload')
+                        return 'uploaded'
+                    return 'error'
+                else:
+                    if romm.downloadSave(save_id, local_path):
+                        self._update_save_record(db, rom_id, save_id, save, local_path, 'download')
+                        return 'downloaded'
+                    return 'error'
+        
+        elif local_exists:
+            # Local exists but not in database - upload to RomM
+            result = romm.uploadSave(rom_id, local_path, emulator)
+            if result:
+                self._update_save_record(db, rom_id, save_id, save, local_path, 'upload')
+                return 'uploaded'
+            return 'error'
+        
+        else:
+            # Local doesn't exist - download from RomM
+            if romm.downloadSave(save_id, local_path):
+                self._update_save_record(db, rom_id, save_id, save, local_path, 'download')
+                return 'downloaded'
+            return 'error'
+    
+    def _get_save_path(self, rom: dict, save: dict, steamdeck_base_path: str) -> Optional[str]:
+        """
+        Determine the local save file path based on emulator and platform.
+        
+        RetroDeck structure: /home/deck/retrodeck/saves/{emulator}/{platform}/{filename}
+        """
+        try:
+            db = DeckRommSyncDatabase(self.dbName)
+            
+            emulator = save.get('emulator', 'retroarch').lower()
+            file_name = save.get('file_name')
+            platform_id = rom.get('platform_id')
+            
+            # Get platform matching
+            platform_matching = db.select_as_dict(
+                "platforms_matching",
+                where="romm_platform_id = ?",
+                condition_values=(platform_id,)
+            )
+            
+            if not platform_matching:
+                self.background_logger.error(f"No platform matching for platform_id {platform_id}")
+                return None
+            
+            platform_folder = platform_matching[0].get('steamdeck_platform_name')
+            
+            # RetroDeck saves structure
+            save_path = os.path.join(
+                steamdeck_base_path,
+                "saves",
+                emulator,
+                platform_folder,
+                file_name
+            )
+            
+            return save_path
+            
+        except Exception as e:
+            self.background_logger.error(f"Error determining save path: {e}")
+            return None
+    
+    def _update_save_record(self, db: DeckRommSyncDatabase, rom_id: int, save_id: int,
+                           save: dict, local_path: str, direction: str):
+        """Update or create save record in database."""
+        try:
+            now = datetime.now().isoformat()
+            
+            # Check if record exists
+            existing = db.select_as_dict(
+                "rom_saves",
+                where="rom_id = ? AND file_name = ?",
+                condition_values=(rom_id, save.get('file_name'))
+            )
+            
+            file_size = save.get('file_size_bytes', 0)
+            if os.path.exists(local_path):
+                file_size = os.path.getsize(local_path)
+            
+            save_data = {
+                'romm_save_id': save_id,
+                'emulator': save.get('emulator'),
+                'remote_updated_at': save.get('updated_at'),
+                'local_updated_at': now,
+                'sync_status': 1,
+                'sync_direction': direction,
+                'last_sync_at': now,
+                'file_size_bytes': file_size
+            }
+            
+            if existing:
+                # Update existing record
+                db.update("rom_saves", save_data, "id = ?", (existing[0]['id'],))
+            else:
+                # Insert new record
+                save_data.update({
+                    'rom_id': rom_id,
+                    'file_name': save.get('file_name'),
+                    'local_path': local_path
+                })
+                
+                columns = list(save_data.keys())
+                values = tuple(save_data.values())
+                db.insert("rom_saves", columns, values)
+                
+        except Exception as e:
+            self.background_logger.error(f"Failed to update save record: {e}") 

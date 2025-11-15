@@ -15,10 +15,84 @@ class DeckRommSyncDatabase:
     def _init_database(self):
         """
         Initialize database with Write-Ahead Logging (WAL) for better concurrency.
+        Also creates the saves and states tables if they don't exist.
         """
         with self._get_connection() as conn:
             # Enable WAL mode for better concurrent access
             conn.execute("PRAGMA journal_mode=WAL")
+            conn.commit()
+            
+            # Create rom_saves table if it doesn't exist
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS rom_saves (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rom_id INTEGER NOT NULL,
+                    romm_save_id INTEGER,
+                    emulator TEXT,
+                    file_name TEXT NOT NULL,
+                    file_size_bytes INTEGER,
+                    local_path TEXT,
+                    remote_updated_at TEXT,
+                    local_updated_at TEXT,
+                    sync_status INTEGER DEFAULT 0,
+                    sync_direction TEXT,
+                    last_sync_at TEXT,
+                    error_message TEXT,
+                    FOREIGN KEY (rom_id) REFERENCES roms(roms_id)
+                )
+            """)
+            
+            # Create rom_states table if it doesn't exist
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS rom_states (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rom_id INTEGER NOT NULL,
+                    romm_state_id INTEGER,
+                    emulator TEXT,
+                    file_name TEXT NOT NULL,
+                    file_size_bytes INTEGER,
+                    local_path TEXT,
+                    screenshot_path TEXT,
+                    remote_updated_at TEXT,
+                    local_updated_at TEXT,
+                    sync_status INTEGER DEFAULT 0,
+                    sync_direction TEXT,
+                    last_sync_at TEXT,
+                    error_message TEXT,
+                    FOREIGN KEY (rom_id) REFERENCES roms(roms_id)
+                )
+            """)
+            
+            # Create sync_history table for saves if it doesn't exist
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS save_sync_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sync_type TEXT NOT NULL,
+                    started_at TEXT NOT NULL,
+                    completed_at TEXT,
+                    total_saves INTEGER DEFAULT 0,
+                    downloaded INTEGER DEFAULT 0,
+                    uploaded INTEGER DEFAULT 0,
+                    conflicts INTEGER DEFAULT 0,
+                    errors INTEGER DEFAULT 0,
+                    status TEXT DEFAULT 'running'
+                )
+            """)
+            
+            # Create oauth_tokens table if it doesn't exist
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS oauth_tokens (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    access_token TEXT NOT NULL,
+                    refresh_token TEXT,
+                    token_type TEXT DEFAULT 'bearer',
+                    expires_at TEXT NOT NULL,
+                    scopes TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            
             conn.commit()
     
     @contextmanager

@@ -13,6 +13,19 @@
     },
     "sync": {
         "max_workers": 8,
-        "max_retries": 3
-    }
+        "max_retries": 3,
+        "enable_save_sync": true,
+        "enable_state_sync": false,
+        "save_sync_interval_minutes": 5
+    },
+    "oauth": {
+     "enabled": true,
+     "scopes": [
+       "platforms.read",
+       "roms.read",
+       "collections.read",
+       "assets.read",
+       "assets.write"
+     ]
+   }
 }

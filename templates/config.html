@@ -66,17 +66,140 @@
                                 </span>
                             </div>
                             <p class="help">Your RomM account password</p>
-                        </div>  
+                        </div>
+                        
+                        <!-- OAuth2 Settings -->
+                        <div class="field">
+                            <label class="label">
+                                <span class="icon-text">
+                                    <span class="icon"><i class="fa-solid fa-key"></i></span>
+                                    <span>Authentication Method</span>
+                                </span>
+                            </label>
+                            <div class="control">
+                                <label class="radio">
+                                    <input type="radio" name="use_oauth" value="0" 
+                                           {% if not config.get('use_oauth') or config.get('use_oauth') == '0' %}checked{% endif %}>
+                                    <span class="icon-text">
+                                        <span class="icon"><i class="fa-solid fa-shield-halved"></i></span>
+                                        <span>Basic Auth (Legacy)</span>
+                                    </span>
+                                </label>
+                                <br>
+                                <label class="radio">
+                                    <input type="radio" name="use_oauth" value="1" 
+                                           {% if config.get('use_oauth') == '1' or config.get('use_oauth') == 'true' %}checked{% endif %}>
+                                    <span class="icon-text">
+                                        <span class="icon"><i class="fa-solid fa-shield"></i></span>
+                                        <span>OAuth2 (RomM v4.4.0+)</span>
+                                    </span>
+                                </label>
+                            </div>
+                            <p class="help">
+                                OAuth2 is more secure and recommended for RomM v4.4.0 and later. 
+                                Use Basic Auth for older RomM versions.
+                            </p>
+                        </div>
+                        
+                        <div class="field" id="oauth-scopes-field" style="display: {% if config.get('use_oauth') == '1' or config.get('use_oauth') == 'true' %}block{% else %}none{% endif %};">
+                            <label class="label">
+                                <span class="icon-text">
+                                    <span class="icon"><i class="fa-solid fa-list-check"></i></span>
+                                    <span>OAuth2 Scopes</span>
+                                </span>
+                            </label>
+                            <div class="control">
+                                <label class="checkbox">
+                                    <input type="checkbox" name="oauth_scope_platforms_read" value="platforms.read" 
+                                           {% if 'platforms.read' in config.get('oauth_scopes', '').split(',') %}checked{% endif %}>
+                                    <span>platforms.read</span>
+                                    <span class="tag is-info is-light is-small ml-2">Required</span>
+                                </label>
+                                <br>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="oauth_scope_roms_read" value="roms.read" 
+                                           {% if 'roms.read' in config.get('oauth_scopes', '').split(',') %}checked{% endif %}>
+                                    <span>roms.read</span>
+                                    <span class="tag is-info is-light is-small ml-2">Required</span>
+                                </label>
+                                <br>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="oauth_scope_collections_read" value="collections.read" 
+                                           {% if 'collections.read' in config.get('oauth_scopes', '').split(',') %}checked{% endif %}>
+                                    <span>collections.read</span>
+                                    <span class="tag is-info is-light is-small ml-2">Required</span>
+                                </label>
+                                <br>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="oauth_scope_assets_read" value="assets.read" 
+                                           {% if 'assets.read' in config.get('oauth_scopes', '').split(',') %}checked{% endif %}>
+                                    <span>assets.read</span>
+                                    <span class="tag is-light is-small ml-2">Optional</span>
+                                </label>
+                                <br>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="oauth_scope_assets_write" value="assets.write" 
+                                           {% if 'assets.write' in config.get('oauth_scopes', '').split(',') %}checked{% endif %}>
+                                    <span>assets.write</span>
+                                    <span class="tag is-warning is-light is-small ml-2">For Save Sync</span>
+                                </label>
+                            </div>
+                            <p class="help">
+                                Select the permissions needed for DeckRommSync. Required scopes are always checked.
+                                Enable assets.write if you want to upload save files to RomM.
+                            </p>
+                        </div>
 
                         <div class="control">
                             <button class="button is-primary" type="submit">
                                 <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
                                 <span>Save Settings</span>
                             </button>
+                            <button class="button is-info ml-2" type="button" id="test-connection">
+                                <span class="icon"><i class="fa-solid fa-vial"></i></span>
+                                <span>Test Connection</span>
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
+
+            <!-- OAuth Token Status (if enabled) -->
+            {% if config.get('use_oauth') == '1' or config.get('use_oauth') == 'true' %}
+            <h1 class="title custom-title">
+                <span class="icon"><i class="fa-solid fa-clock"></i></span>
+                OAuth Token Status
+            </h1>
+            <div class="card has-background-dark">
+                <div class="card-content">
+                    <div class="content">
+                        {% if oauth_token %}
+                        <div class="notification is-success is-light">
+                            <span class="icon-text">
+                                <span class="icon"><i class="fa-solid fa-check-circle"></i></span>
+                                <span><strong>Token Active</strong></span>
+                            </span>
+                            <p class="mt-2">
+                                <strong>Expires:</strong> {{ oauth_token.expires_at }}<br>
+                                <strong>Scopes:</strong> {{ oauth_token.scopes }}<br>
+                                <small>Token will automatically refresh before expiration.</small>
+                            </p>
+                        </div>
+                        {% else %}
+                        <div class="notification is-warning is-light">
+                            <span class="icon-text">
+                                <span class="icon"><i class="fa-solid fa-exclamation-triangle"></i></span>
+                                <span><strong>No Active Token</strong></span>
+                            </span>
+                            <p class="mt-2">
+                                Save your settings above to authenticate and obtain an OAuth2 token.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Sync Collections Card -->
             <h1 class="title custom-title">
@@ -341,6 +464,49 @@
                 passwordInput.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
+            }
+        });
+        
+        // OAuth toggle functionality
+        const oauthRadios = document.querySelectorAll('input[name="use_oauth"]');
+        const oauthScopesField = document.getElementById('oauth-scopes-field');
+        
+        oauthRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === '1') {
+                    oauthScopesField.style.display = 'block';
+                } else {
+                    oauthScopesField.style.display = 'none';
+                }
+            });
+        });
+        
+        // Test Connection functionality
+        document.getElementById('test-connection').addEventListener('click', async function() {
+            const button = this;
+            const originalHTML = button.innerHTML;
+            button.classList.add('is-loading');
+            button.disabled = true;
+            
+            try {
+                const formData = new FormData(document.getElementById('romm-api-form'));
+                const response = await fetch('{{ url_for("test_romm_connection") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('✓ Connection successful! RomM server is reachable.', 'success');
+                } else {
+                    showToast('✗ Connection failed: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showToast('✗ Connection test failed: ' + error.message, 'error');
+            } finally {
+                button.classList.remove('is-loading');
+                button.disabled = false;
             }
         });
 

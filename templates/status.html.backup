@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="section">
+        <div class="container">
+            <!-- Sync Status Card -->
+            <div class="card has-background-dark mb-5" id="sync-status-card">
+                <div class="card-content">
+                    <div class="media">
+                        <div class="media-left">
+                            <div class="sync-spinner-container">
+                                <i class="fa-solid fa-sync fa-3x" id="sync-spinner"></i>
+                            </div>
+                        </div>
+                        <div class="media-content">
+                            <p class="title is-4">
+                                <span class="icon-text">
+                                    <span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+                                    <span>Sync Status</span>
+                                </span>
+                            </p>
+                            <p class="subtitle is-6" id="sync-status-text">Checking status...</p>
+                            <div id="sync-progress-details" class="content is-small" style="display: none;">
+                                <div class="columns is-mobile is-multiline">
+                                    <div class="column is-half-mobile is-one-quarter-tablet">
+                                        <div class="has-text-success">
+                                            <span class="icon"><i class="fa-solid fa-circle-check"></i></span>
+                                            <strong id="roms-success">0</strong> Synced
+                                        </div>
+                                    </div>
+                                    <div class="column is-half-mobile is-one-quarter-tablet">
+                                        <div class="has-text-warning">
+                                            <span class="icon"><i class="fa-solid fa-spinner"></i></span>
+                                            <strong id="roms-pending">0</strong> Pending
+                                        </div>
+                                    </div>
+                                    <div class="column is-half-mobile is-one-quarter-tablet">
+                                        <div class="has-text-danger">
+                                            <span class="icon"><i class="fa-solid fa-circle-xmark"></i></span>
+                                            <strong id="roms-error">0</strong> Errors
+                                        </div>
+                                    </div>
+                                    <div class="column is-half-mobile is-one-quarter-tablet">
+                                        <div class="has-text-info">
+                                            <span class="icon"><i class="fa-solid fa-list"></i></span>
+                                            <strong id="roms-total">0</strong> Total
+                                        </div>
+                                    </div>
+                                </div>
+                                <progress class="progress is-primary" id="sync-progress-bar" value="0" max="100">0%</progress>
+                                <p class="is-size-7 has-text-grey" id="sync-last-update">Last update: Never</p>
+                            </div>
+                        </div>
+                        <div class="media-right">
+                            <button class="button is-primary" id="trigger-sync-btn" title="Start sync now">
+                                <span class="icon"><i class="fa-solid fa-rotate"></i></span>
+                                <span>Sync Now</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="level">
+                <div class="level-left">
+                    <div class="level-item">
+                        <h2 class="title">Collections</h2>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <div class="field has-addons">
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" id="search-input" placeholder="Search ROMs...">
+                                <span class="icon is-left">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                            </div>
+                            <div class="control">
+                                <button class="button is-info" id="clear-search">
+                                    <span class="icon">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="filter-buttons">
+                <button class="button is-small filter-btn" data-filter="all">
+                    <span class="icon"><i class="fa-solid fa-list"></i></span>
+                    <span>All</span>
+                </button>
+                <button class="button is-small is-warning filter-btn" data-filter="pending">
+                    <span class="icon"><i class="fa-solid fa-spinner"></i></span>
+                    <span>Pending</span>
+                </button>
+                <button class="button is-small is-success filter-btn" data-filter="completed">
+                    <span class="icon"><i class="fa-solid fa-circle-check"></i></span>
+                    <span>Completed</span>
+                </button>
+                <button class="button is-small is-danger filter-btn" data-filter="error">
+                    <span class="icon"><i class="fa-solid fa-circle-xmark"></i></span>
+                    <span>Errors</span>
+                </button>
+            </div>
+
+            {% for collection in collections %}
+            <div class="card has-background-dark collection-card" data-collection-id="{{ collection.collections_id }}"> 
+                <div class="card-content">
+                    <div class="media collection-content" data-id="{{ collection.collections_id }}">
+                        <div class="media-left">
+                            <figure class="image is-48x48">
+                                <img height="64" width="64" src="https://cdn.cloudflare.steamstatic.com/steamdeck/images/social_media_image.jpg"
+                                     alt="Steam Deck" />
+                            </figure>                            
+                        </div>
+                        <div class="media-content">
+                            <p class="title is-4">
+                                {{ collection.name }}
+                                {% set pending = collection.roms | selectattr('sync_status', 'equalto', 0) | list | length %}
+                                {% set completed = collection.roms | selectattr('sync_status', 'equalto', 1) | list | length %}
+                                {% set errors = collection.roms | selectattr('sync_status', 'equalto', 2) | list | length %}
+                                
+                                {% if completed > 0 %}
+                                <span class="badge badge-success">{{ completed }} <i class="fa-solid fa-check"></i></span>
+                                {% endif %}
+                                {% if pending > 0 %}
+                                <span class="badge badge-warning">{{ pending }} <i class="fa-solid fa-spinner"></i></span>
+                                {% endif %}
+                                {% if errors > 0 %}
+                                <span class="badge badge-danger">{{ errors }} <i class="fa-solid fa-xmark"></i></span>
+                                {% endif %}
+                            </p>
+                            <p class="subtitle is-6">{{ collection.roms|length }} ROMs total</p>
+                        </div>
+                        <i class="fa-solid fa-circle-chevron-down fa-2xl collapse-icon"></i>
+                    </div>
+                    <div id="collections_id_{{ collection.collections_id }}" class="content collapse">                                                                        
+                        <div class="list has-hoverable-list-items">
+                            {% for rom in collection.roms %}
+                            <div class="list-item rom-item" data-rom-name="{{ rom.name|lower }}" data-platform="{{ rom.platform_fs_slug|lower }}" data-status="{{ rom.sync_status }}">
+                                <div class="list-item-image">
+                                    <figure class="image">
+                                        <img class="cover-img" src="{{ rom.url_cover }}" alt="{{ rom.name }}" loading="lazy">
+                                    </figure>
+                                </div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">{{ rom.name }}</div>
+                                    <div class="list-item-description">
+                                        <span class="icon is-small"><i class="fa-solid fa-gamepad"></i></span>
+                                        {{ rom.platform_fs_slug }}
+                                    </div>
+                                </div>
+                                {% if rom.sync_status == 0 %}
+                                <i class="fa-solid fa-spinner fa-xl icon-in-progess" title="Pending sync"></i>
+                                {% elif rom.sync_status == 1 %}
+                                <i class="fa-solid fa-circle-check fa-xl icon-in-success" title="Synced successfully"></i>
+                                {% elif rom.sync_status == 2 %}
+                                <i class="fa-solid fa-circle-xmark fa-xl icon-in-error" title="Sync failed"></i>
+                                {% endif %}                                                                
+                                <div class="dropdown btn-bars-menu">
+                                    <div class="dropdown-trigger">
+                                      <button class="button is-small" aria-haspopup="true" aria-controls="dropdown-menu" title="Actions">
+                                        <span><i class="fa-solid fa-ellipsis-vertical"></i></span>
+                                      </button>
+                                    </div>
+                                    <div class="dropdown-menu inner-button" role="menu">
+                                      <div class="dropdown-content">
+                                        <a href="#" class="dropdown-item is-disabled">
+                                            <span class="icon"><i class="fa-solid fa-info-circle"></i></span>
+                                            <span>Show Details</span>
+                                        </a>
+                                        <hr class="dropdown-divider" />
+                                        <a onclick="dropdown_reset_status({{ rom.roms_id }}, '{{ rom.name }}')" class="dropdown-item">
+                                            <span class="icon"><i class="fa-solid fa-rotate-left"></i></span>
+                                            <span>Reset Sync Status</span>
+                                        </a>
+                                      </div>
+                                    </div>
+                                  </div>
+                            </div>                             
+                            {% endfor %}                           
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not collections %}
+            <div class="notification is-info">
+                <p><strong>No collections enabled for sync</strong></p>
+                <p>Go to the <a href="/config">Config page</a> to enable collections for synchronization.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <style>
+        .sync-spinner-container {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #sync-spinner {
+            color: #3273dc;
+            transition: all 0.3s ease;
+        }
+        
+        #sync-spinner.spinning {
+            animation: spin 2s linear infinite;
+        }
+        
+        #sync-spinner.idle {
+            color: #48c774;
+        }
+        
+        #sync-spinner.error {
+            color: #f14668;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25em 0.5em;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-success {
+            background-color: rgba(72, 199, 116, 0.2);
+            color: #48c774;
+        }
+        
+        .badge-warning {
+            background-color: rgba(255, 224, 138, 0.2);
+            color: #ffe08a;
+        }
+        
+        .badge-danger {
+            background-color: rgba(241, 70, 104, 0.2);
+            color: #f14668;
+        }
+    </style>
+
+    <script>
+        let syncStatusInterval;
+        
+        // Manual sync trigger
+        document.getElementById('trigger-sync-btn').addEventListener('click', async function() {
+            const button = this;
+            
+            if (button.classList.contains('is-loading')) {
+                return; // Already in progress
+            }
+            
+            try {
+                button.classList.add('is-loading');
+                
+                const response = await fetch('/api/trigger_sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Sync started successfully', 'success');
+                    // Update status immediately
+                    setTimeout(() => updateSyncStatus(), 500);
+                } else {
+                    showToast(data.message || 'Failed to start sync', 'error');
+                    button.classList.remove('is-loading');
+                }
+                
+            } catch (error) {
+                console.error('Error triggering sync:', error);
+                showToast('Error triggering sync', 'error');
+                button.classList.remove('is-loading');
+            }
+        });
+        
+        // Fetch sync status from API
+        async function updateSyncStatus() {
+            try {
+                const response = await fetch('/api/sync_status');
+                const status = await response.json();
+                
+                const spinner = document.getElementById('sync-spinner');
+                const statusText = document.getElementById('sync-status-text');
+                const progressDetails = document.getElementById('sync-progress-details');
+                const progressBar = document.getElementById('sync-progress-bar');
+                const triggerButton = document.getElementById('trigger-sync-btn');
+                
+                // Update spinner animation and button state
+                if (status.is_running) {
+                    spinner.classList.add('spinning');
+                    spinner.classList.remove('idle', 'error');
+                    statusText.textContent = status.current_step || 'Syncing...';
+                    progressDetails.style.display = 'block';
+                    triggerButton.disabled = true;
+                    triggerButton.classList.add('is-loading');
+                } else {
+                    spinner.classList.remove('spinning');
+                    triggerButton.disabled = false;
+                    triggerButton.classList.remove('is-loading');
+                    
+                    if (status.current_step && status.current_step.startsWith('Error')) {
+                        spinner.classList.add('error');
+                        spinner.classList.remove('idle');
+                        statusText.textContent = status.current_step;
+                    } else {
+                        spinner.classList.add('idle');
+                        spinner.classList.remove('error');
+                        statusText.textContent = status.current_step === 'Completed' ? 'Last sync completed' : 'Idle - Next sync in ' + getNextSyncTime();
+                    }
+                    progressDetails.style.display = 'block';
+                }
+                
+                // Update progress stats
+                const progress = status.progress || {};
+                document.getElementById('roms-success').textContent = progress.roms_success || 0;
+                document.getElementById('roms-error').textContent = progress.roms_error || 0;
+                
+                const pending = (progress.total_roms || 0) - (progress.roms_success || 0) - (progress.roms_error || 0);
+                document.getElementById('roms-pending').textContent = pending;
+                document.getElementById('roms-total').textContent = progress.total_roms || 0;
+                
+                // Update progress bar
+                if (progress.total_roms > 0) {
+                    const percentage = Math.round(((progress.roms_success || 0) / progress.total_roms) * 100);
+                    progressBar.value = percentage;
+                    progressBar.textContent = percentage + '%';
+                } else {
+                    progressBar.value = 0;
+                    progressBar.textContent = '0%';
+                }
+                
+                // Update last update time
+                if (status.last_update) {
+                    const lastUpdate = new Date(status.last_update);
+                    const now = new Date();
+                    const secondsAgo = Math.floor((now - lastUpdate) / 1000);
+                    
+                    let timeAgo;
+                    if (secondsAgo < 60) {
+                        timeAgo = secondsAgo + ' seconds ago';
+                    } else if (secondsAgo < 3600) {
+                        timeAgo = Math.floor(secondsAgo / 60) + ' minutes ago';
+                    } else {
+                        timeAgo = lastUpdate.toLocaleString();
+                    }
+                    
+                    document.getElementById('sync-last-update').textContent = 'Last update: ' + timeAgo;
+                } else {
+                    document.getElementById('sync-last-update').textContent = 'Last update: Never';
+                }
+                
+            } catch (error) {
+                console.error('Error fetching sync status:', error);
+                document.getElementById('sync-status-text').textContent = 'Error fetching status';
+            }
+        }
+        
+        function getNextSyncTime() {
+            // Sync runs every 1 minute - calculate rough estimate
+            return '< 1 minute';
+        }
+        
+        // Update status immediately on page load
+        updateSyncStatus();
+        
+        // Poll every 2 seconds for real-time updates
+        syncStatusInterval = setInterval(updateSyncStatus, 2000);
+        
+        // Clean up interval when page is hidden/unloaded
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                clearInterval(syncStatusInterval);
+            } else {
+                updateSyncStatus();
+                syncStatusInterval = setInterval(updateSyncStatus, 2000);
+            }
+        });
+
+        // Collection collapse/expand functionality
+        document.querySelectorAll(".collection-content").forEach(div => {            
+            div.addEventListener("click", function() {
+                let divId = div.getAttribute("data-id");                
+                let content_div = document.getElementById("collections_id_" + divId);
+                content_div.classList.toggle("collapse");   
+                
+                // Icon toggle
+                let icon = this.querySelector(".collapse-icon");
+                icon.classList.toggle("fa-circle-chevron-up");
+                icon.classList.toggle("fa-circle-chevron-down");
+            });
+        }); 
+        
+        // Dropdown functionality
+        document.querySelectorAll(".dropdown").forEach(dropdown => {
+            const trigger = dropdown.querySelector(".dropdown-trigger button");
+            trigger.addEventListener("click", function(e) {
+                e.stopPropagation(); // Prevent collection collapse
+                dropdown.classList.toggle("is-active");
+            });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest(".dropdown")) {
+                document.querySelectorAll(".dropdown.is-active").forEach(dd => {
+                    dd.classList.remove("is-active");
+                });
+            }
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById("search-input");
+        const clearSearch = document.getElementById("clear-search");
+        
+        searchInput.addEventListener("input", function() {
+            const searchTerm = this.value.toLowerCase();
+            filterROMs(searchTerm, currentFilter);
+        });
+        
+        clearSearch.addEventListener("click", function() {
+            searchInput.value = "";
+            filterROMs("", currentFilter);
+        });
+
+        // Filter functionality
+        let currentFilter = "all";
+        
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.addEventListener("click", function() {
+                // Update active state
+                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("is-active"));
+                this.classList.add("is-active");
+                
+                currentFilter = this.getAttribute("data-filter");
+                filterROMs(searchInput.value.toLowerCase(), currentFilter);
+            });
+        });
+        
+        // Set initial active filter
+        document.querySelector(".filter-btn[data-filter='all']").classList.add("is-active");
+
+        function filterROMs(searchTerm, filter) {
+            document.querySelectorAll(".collection-card").forEach(card => {
+                const romItems = card.querySelectorAll(".rom-item");
+                let visibleCount = 0;
+                
+                romItems.forEach(rom => {
+                    const romName = rom.getAttribute("data-rom-name");
+                    const platform = rom.getAttribute("data-platform");
+                    const status = rom.getAttribute("data-status");
+                    
+                    let matchesSearch = searchTerm === "" || 
+                                       romName.includes(searchTerm) || 
+                                       platform.includes(searchTerm);
+                    
+                    let matchesFilter = filter === "all" ||
+                                       (filter === "pending" && status === "0") ||
+                                       (filter === "completed" && status === "1") ||
+                                       (filter === "error" && status === "2");
+                    
+                    if (matchesSearch && matchesFilter) {
+                        rom.style.display = "";
+                        visibleCount++;
+                    } else {
+                        rom.style.display = "none";
+                    }
+                });
+                
+                // Hide collection if no ROMs visible
+                card.style.display = visibleCount > 0 ? "" : "none";
+            });
+        }
+
+        // Dropdown Reset Status with confirmation
+        function dropdown_reset_status(roms_id, romName) {
+            if (!confirm(`Reset sync status for "${romName}"?`)) {
+                return;
+            }
+            
+            // Show loading toast
+            showToast("Resetting status...", "info", 2000);
+            
+            fetch("/dropdown/reset_status", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    roms_id: roms_id
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast("Error: " + data.error, "error");
+                } else {
+                    showToast("Status reset successfully", "success");
+                    setTimeout(() => location.reload(), 1000);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showToast("Failed to reset status", "error");
+            });
+        }
+    </script>
+{% endblock content %}

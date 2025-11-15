@@ -98,7 +98,13 @@ def run_background_task():
         # Sync ROMs
         sync_status["current_step"] = "Syncing ROMs"
         sync_status["last_update"] = datetime.now().isoformat()
-        bgWorker.sync_copyRoms()    
+        bgWorker.sync_copyRoms()
+        
+        # Sync save files if enabled
+        if app_config.get("sync", {}).get("enable_save_sync", False):
+            sync_status["current_step"] = "Syncing save files"
+            sync_status["last_update"] = datetime.now().isoformat()
+            bgWorker.sync_save_files()
         
         background_logger.info("Background Task finished...")
         sync_status["current_step"] = "Completed"
@@ -118,8 +124,22 @@ def status():
     db = DeckRommSyncDatabase(app_config["database"].get("name", "deckrommsync.db"))
     collection_db_result = db.select_as_dict("collections", ['*'], 'collection_sync = 1')    
     collections = []
+    
     for collection in collection_db_result:
         roms_in_collection = db.select_as_dict("roms", ['*'], 'collections_id = ?', (collection["collections_id"],))
+        
+        # Get save file info for each ROM
+        for rom in roms_in_collection:
+            # Get saves for this ROM
+            saves = db.select_as_dict("rom_saves", ['*'], 'rom_id = ?', (rom['roms_id'],))
+            rom['saves'] = saves or []
+            rom['save_count'] = len(saves) if saves else 0
+            
+            # Get states for this ROM
+            states = db.select_as_dict("rom_states", ['*'], 'rom_id = ?', (rom['roms_id'],))
+            rom['states'] = states or []
+            rom['state_count'] = len(states) if states else 0
+        
         collection["roms"] = roms_in_collection    
         collections.append(collection)
 
@@ -168,12 +188,20 @@ def config():
     platform_matching = db.select_as_dict("platforms_matching")
 
     # Get Collections
-    collections = db.select_as_dict("collections")    
+    collections = db.select_as_dict("collections")
+    
+    # Get OAuth token status if OAuth is enabled
+    oauth_token = None
+    if config_dict.get('use_oauth') == '1' or config_dict.get('use_oauth') == 'true':
+        tokens = db.select_as_dict("oauth_tokens", order_by="id DESC", limit=1)
+        if tokens:
+            oauth_token = tokens[0]
 
     if request.method == 'POST':
         new_config = request.form.to_dict()
         # Save Config
-    return render_template('config.html', config=config_dict, collections=collections, platform_matching=platform_matching)
+    return render_template('config.html', config=config_dict, collections=collections, 
+                         platform_matching=platform_matching, oauth_token=oauth_token)
 
 # Update Romm API Settings
 @app.route('/config/config_romm_api_settings', methods=['POST'])
@@ -193,6 +221,25 @@ def config_romm_api_settings():
             "RomM Password"
         )
         
+        # Get OAuth settings
+        use_oauth = request.form.get("use_oauth", "0")
+        
+        # Collect selected OAuth scopes
+        oauth_scopes = []
+        if use_oauth == "1":
+            scope_fields = [
+                'oauth_scope_platforms_read',
+                'oauth_scope_roms_read',
+                'oauth_scope_collections_read',
+                'oauth_scope_assets_read',
+                'oauth_scope_assets_write'
+            ]
+            for field in scope_fields:
+                if field in request.form:
+                    oauth_scopes.append(request.form[field])
+        
+        oauth_scopes_str = ','.join(oauth_scopes) if oauth_scopes else 'platforms.read,roms.read,collections.read'
+        
         # Create Database Object
         db = DeckRommSyncDatabase(app_config["database"].get("name", "deckrommsync.db"))
 
@@ -200,9 +247,31 @@ def config_romm_api_settings():
         db.update("config", {"config_value": api_url}, "config_key = ?", ("romm_api_base_url",))
         db.update("config", {"config_value": username}, "config_key = ?", ("romm_username",))
         db.update("config", {"config_value": password}, "config_key = ?", ("romm_password",))
+        db.update("config", {"config_value": use_oauth}, "config_key = ?", ("use_oauth",))
+        db.update("config", {"config_value": oauth_scopes_str}, "config_key = ?", ("oauth_scopes",))
         
-        flash("RomM API settings updated successfully", "success")
-        system_logger.info(f"RomM API settings updated: {api_url}")
+        # If OAuth is enabled, try to authenticate and get token
+        if use_oauth == "1":
+            try:
+                api = RommAPIHelper(
+                    api_base_url=api_url,
+                    logger=system_logger,
+                    db=db
+                )
+                api.login(
+                    username=username,
+                    password=password,
+                    use_oauth=True,
+                    scopes=oauth_scopes or ['platforms.read', 'roms.read', 'collections.read']
+                )
+                flash("RomM API settings updated and OAuth token obtained successfully", "success")
+            except Exception as e:
+                flash(f"Settings saved but OAuth authentication failed: {str(e)}", "warning")
+                system_logger.warning(f"OAuth authentication failed: {e}")
+        else:
+            flash("RomM API settings updated successfully", "success")
+        
+        system_logger.info(f"RomM API settings updated: {api_url}, OAuth: {use_oauth}")
         
     except ValidationError as e:
         flash(f"Validation error: {str(e)}", "error")
@@ -212,6 +281,73 @@ def config_romm_api_settings():
         system_logger.error(f"Error updating RomM API settings: {e}")
     
     return redirect(url_for('config'))
+
+# Test RomM Connection
+@app.route('/config/test_romm_connection', methods=['POST'])
+def test_romm_connection():
+    try:
+        # Get form data
+        api_url = request.form.get("romm_api_base_url")
+        username = request.form.get("romm_username")
+        password = request.form.get("romm_password")
+        use_oauth = request.form.get("use_oauth", "0")
+        
+        # Collect OAuth scopes if enabled
+        oauth_scopes = []
+        if use_oauth == "1":
+            scope_fields = [
+                'oauth_scope_platforms_read',
+                'oauth_scope_roms_read',
+                'oauth_scope_collections_read',
+                'oauth_scope_assets_read',
+                'oauth_scope_assets_write'
+            ]
+            for field in scope_fields:
+                if field in request.form:
+                    oauth_scopes.append(request.form[field])
+        
+        # Create API helper
+        api = RommAPIHelper(
+            api_base_url=api_url,
+            logger=system_logger
+        )
+        
+        # Login
+        if use_oauth == "1":
+            api.login(
+                username=username,
+                password=password,
+                use_oauth=True,
+                scopes=oauth_scopes or ['platforms.read', 'roms.read', 'collections.read']
+            )
+        else:
+            api.login(
+                username=username,
+                password=password,
+                use_oauth=False
+            )
+        
+        # Test connection with heartbeat
+        heartbeat = api.getRommHeartbeat()
+        
+        if heartbeat:
+            return jsonify({
+                'success': True,
+                'message': 'Connection successful',
+                'auth_method': 'OAuth2' if use_oauth == "1" else 'Basic Auth'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Heartbeat failed - server may be unreachable'
+            }), 400
+            
+    except Exception as e:
+        system_logger.error(f"Connection test failed: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # Update Collection Sync Settings
 @app.route('/config/config_collection_sync_settings', methods=['POST']) 
