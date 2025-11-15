@@ -1,28 +1,76 @@
 import sqlite3
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
+from contextlib import contextmanager
 
 class DeckRommSyncDatabase:
     def __init__(self, db_name: str):
         """
-        Initialisiert die Verbindung zur SQLite-Datenbank.
+        Initializes the database configuration.
+        Each operation will create its own connection for thread safety.
         """
         self.db_name = db_name
-        self.connection = sqlite3.connect(self.db_name, check_same_thread=False)
-        self.cursor = self.connection.cursor()
+        # Create initial connection to verify database exists and enable WAL mode
+        self._init_database()
+    
+    def _init_database(self):
+        """
+        Initialize database with Write-Ahead Logging (WAL) for better concurrency.
+        """
+        with self._get_connection() as conn:
+            # Enable WAL mode for better concurrent access
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.commit()
+    
+    @contextmanager
+    def _get_connection(self):
+        """
+        Context manager that provides a thread-safe database connection.
+        Each call creates a new connection that is automatically closed.
+        """
+        connection = sqlite3.connect(self.db_name, timeout=10.0)
+        try:
+            yield connection
+        except Exception as e:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+    
+    @property
+    def connection(self):
+        """
+        Legacy property for backward compatibility.
+        Creates a new connection each time it's accessed.
+        Note: Caller is responsible for closing this connection.
+        """
+        return sqlite3.connect(self.db_name, timeout=10.0)
+    
+    @property
+    def cursor(self):
+        """
+        Legacy property for backward compatibility.
+        Creates a new cursor from a new connection.
+        Note: This will leak connections - use _get_connection() instead.
+        """
+        return self.connection.cursor()
 
     def execute_query(self, query: str, params: Tuple = ()) -> None:
         """
-        Führt eine SQL-Abfrage ohne Rückgabewert aus (INSERT, UPDATE, DELETE).
+        Executes an SQL query without return value (INSERT, UPDATE, DELETE).
+        Thread-safe - creates its own connection.
         """
         try:
-            self.cursor.execute(query, params)
-            self.connection.commit()
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                conn.commit()
         except sqlite3.Error as e:
-            print(f"SQLite Fehler: (0) {e}")
+            print(f"SQLite Error: (0) {e}")
+            raise
     
     def insert(self, table: str, columns: List[str], values: Tuple) -> None:
         """
-        Führt einen INSERT in die Datenbank aus.
+        Executes an INSERT into the database.
         """
         cols = ', '.join(columns)
         placeholders = ', '.join(['?' for _ in columns])
@@ -30,9 +78,19 @@ class DeckRommSyncDatabase:
         # print(query)
         self.execute_query(query, values)
     
+    def insert_or_replace(self, table: str, columns: List[str], values: Tuple) -> None:
+        """
+        Executes an INSERT OR REPLACE into the database.
+        This will update the row if a primary key conflict occurs.
+        """
+        cols = ', '.join(columns)
+        placeholders = ', '.join(['?' for _ in columns])
+        query = f"INSERT OR REPLACE INTO {table} ({cols}) VALUES ({placeholders})"
+        self.execute_query(query, values)
+    
     def update(self, table: str, updates: dict, condition: str, condition_values: Tuple) -> None:
         """
-        Führt ein UPDATE in der Datenbank aus.
+        Executes an UPDATE in the database.
         """
         set_clause = ', '.join([f"{key} = ?" for key in updates.keys()])
         query = f"UPDATE {table} SET {set_clause} WHERE {condition}"
@@ -41,18 +99,21 @@ class DeckRommSyncDatabase:
     
     def fetch_query(self, query: str, params: Tuple = ()) -> List[Tuple]:
         """
-        Führt eine SELECT-Abfrage aus und gibt die Ergebnisse zurück.
+        Executes a SELECT query and returns the results.
+        Thread-safe - creates its own connection.
         """
         try:
-            self.cursor.execute(query, params)
-            return self.cursor.fetchall()
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                return cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"SQLite Fehler: (1) {e}")
+            print(f"SQLite Error: (1) {e}")
             return []
         
     def select(self, table: str, columns: List[str] = ['*'], condition: str = '', condition_values: Tuple = ()) -> List[Tuple]:
         """
-        Führt ein SELECT in der Datenbank aus und gibt die Ergebnisse zurück.
+        Executes a SELECT in the database and returns the results.
         """
         cols = ', '.join(columns)
         query = f"SELECT {cols} FROM {table}"
@@ -60,20 +121,51 @@ class DeckRommSyncDatabase:
             query += f" WHERE {condition}"
         return self.fetch_query(query, condition_values)
     
-    def select_as_dict(self, table: str, columns: List[str] = ['*'], condition: str = '', condition_values: Tuple = ()) -> List[dict]:
+    def select_as_dict(self, table: str, columns: List[str] = ['*'], condition: str = '', condition_values: Tuple = (), order_by: str = '', limit: int = None) -> List[dict]:
         """
-        Führt ein SELECT in der Datenbank aus und gibt die Ergebnisse als Liste von Dictionaries zurück.
+        Executes a SELECT in the database and returns the results as a list of dictionaries.
+        Thread-safe - creates its own connection.
+        
+        Args:
+            table: Table name
+            columns: List of column names to select
+            condition: WHERE clause condition
+            condition_values: Values for the WHERE clause
+            order_by: ORDER BY clause (e.g., "id DESC")
+            limit: Maximum number of rows to return
         """
         cols = ', '.join(columns)
         query = f"SELECT {cols} FROM {table}"
         if condition:
             query += f" WHERE {condition}"
+        if order_by:
+            query += f" ORDER BY {order_by}"
+        if limit:
+            query += f" LIMIT {limit}"
 
         try:
-            self.cursor.execute(query, condition_values)
-            rows = self.cursor.fetchall()
-            column_names = [desc[0] for desc in self.cursor.description]  # Holt die Spaltennamen
-            return [dict(zip(column_names, row)) for row in rows]  # Erstellt Dicts
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, condition_values)
+                rows = cursor.fetchall()
+                column_names = [desc[0] for desc in cursor.description]  # Gets the column names
+                return [dict(zip(column_names, row)) for row in rows]  # Creates dicts
         except sqlite3.Error as e:
-            print(f"SQLite Fehler: (2) {e}")
+            print(f"SQLite Error: (2) {e}")
             return []
+    
+    def close(self):
+        """
+        Close method for compatibility.
+        Since we use connection-per-operation, this is a no-op.
+        """
+        pass
+    
+    def __enter__(self):
+        """Support for context manager usage."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Support for context manager usage."""
+        self.close()
+        return False

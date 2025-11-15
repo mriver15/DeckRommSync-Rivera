@@ -3,140 +3,384 @@
 {% block content %}
     <section class="section">
         <div class="container">
-            <h1 class="title">RomM API Settings</h1>
-              <div class="card has-background-dark">                  
+            <!-- RomM API Settings Card -->
+            <h1 class="title">
+                <span class="icon"><i class="fa-solid fa-plug"></i></span>
+                RomM API Settings
+            </h1>
+            <div class="card has-background-dark">                  
                 <div class="card-content">
-                  <!-- <p class="title">RomM API Settings</p> -->
-                  <form method="post" action="{{ url_for('config_romm_api_settings') }}">
-                  <div class="field">
-                    <label class="label">RomM API URL</label>
-                    <div class="control">
-                        <input class="input" type="text" placeholder="RomM API URL" name="romm_api_base_url" value="{{ config.get('romm_api_base_url', '') }}">
-                    </div>
-                  </div>
-                  
-                  <div class="field">
-                    <label class="label">Username</label>
-                    <div class="control">
-                        <input class="input" type="text" placeholder="Username" name="romm_username" value="{{ config.get('romm_username', '') }}">
-                    </div>
-                  </div>
+                    <form method="post" action="{{ url_for('config_romm_api_settings') }}" id="romm-api-form">
+                        <div class="field">
+                            <label class="label">
+                                <span class="icon-text">
+                                    <span class="icon"><i class="fa-solid fa-link"></i></span>
+                                    <span>RomM API URL</span>
+                                </span>
+                            </label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" placeholder="https://romm.example.com" 
+                                       name="romm_api_base_url" value="{{ config.get('romm_api_base_url', '') }}" 
+                                       required pattern="https?://.+">
+                                <span class="icon is-left">
+                                    <i class="fa-solid fa-globe"></i>
+                                </span>
+                            </div>
+                            <p class="help">Enter the full URL to your RomM instance (e.g., https://romm.example.com)</p>
+                        </div>
+                        
+                        <div class="field">
+                            <label class="label">
+                                <span class="icon-text">
+                                    <span class="icon"><i class="fa-solid fa-user"></i></span>
+                                    <span>Username</span>
+                                </span>
+                            </label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" placeholder="Enter username" 
+                                       name="romm_username" value="{{ config.get('romm_username', '') }}" 
+                                       required minlength="1" maxlength="150">
+                                <span class="icon is-left">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                            </div>
+                            <p class="help">Your RomM account username</p>
+                        </div>
 
-                  <div class="field">
-                    <label class="label">Password</label>
-                    <div class="control">
-                        <input class="input" type="password" placeholder="Password" name="romm_password" value="{{ config.get('romm_password', '') }}">
-                    </div>
-                  </div>  
+                        <div class="field">
+                            <label class="label">
+                                <span class="icon-text">
+                                    <span class="icon"><i class="fa-solid fa-lock"></i></span>
+                                    <span>Password</span>
+                                </span>
+                            </label>
+                            <div class="control has-icons-left has-icons-right">
+                                <input class="input" type="password" placeholder="Enter password" 
+                                       name="romm_password" value="{{ config.get('romm_password', '') }}" 
+                                       required minlength="1" maxlength="150" id="password-input">
+                                <span class="icon is-left">
+                                    <i class="fa-solid fa-lock"></i>
+                                </span>
+                                <span class="icon is-right is-clickable" id="toggle-password">
+                                    <i class="fa-solid fa-eye"></i>
+                                </span>
+                            </div>
+                            <p class="help">Your RomM account password</p>
+                        </div>  
 
-                  <div class="control">
-                    <button class="button is-primary" type="submit">
-                      Save
-                    </button>
-                  </div>
-                </form>
-              </div>
+                        <div class="control">
+                            <button class="button is-primary" type="submit">
+                                <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
+                                <span>Save Settings</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-                <h1 class="title custom-title">Sync Collections</h1>
-                <div class="card has-background-dark">                  
-                  <div class="card-content">
-                    <!-- <p class="title">Sync Collections</p> -->
+            <!-- Sync Collections Card -->
+            <h1 class="title custom-title">
+                <span class="icon"><i class="fa-solid fa-layer-group"></i></span>
+                Sync Collections
+            </h1>
+            <div class="card has-background-dark">                  
+                <div class="card-content">
                     <form method="post" action="{{ url_for('config_collection_sync_settings') }}">
-                    <div class="field">                    
-                      <div class="list has-hoverable-list-items">
-                          {% for collection in collections %}
-                          <div class="list-item">     
-                              <input type="text" hidden name="collections_id" value="{{ collection.collections_id }}">       
-                              <input class="checkbox" type="checkbox" name="collection_sync_{{ collection.collections_id }}" value="{{ collection.collection_sync }}" {% if collection.collection_sync %}checked{% endif %} />            
-                              <div class="list-item-content">                                
-                                  <div class="list-item-title">{{ collection.name }}</div>
-                                  <div class="list-item-description"></div>
-                              </div>                            
-                          </div> 
-                          {% endfor %}                           
-                      </div>
-                    </div>
-                    
-                    <div class="control">
-                      <button class="button is-primary" type="submit">
-                        Save
-                      </button>
-                    </div>
-                    </form>
-                  </div>
-                </div>
-                
-                <h1 class="title custom-title">Platform Matching</h1>
-                <div class="card has-background-dark">                  
-                  <div class="card-content">
-                    <!-- <p class="title">Platform Matching</p> -->
-                    <div class="content">
-                      <label class="label">Steamdeck System Path</label>
-                      <form method="post" action="{{ url_for('config_steamdeck_platform_path') }}">
-                      <div class="field is-grouped">                  
-                        <div class="control">
-                            <input class="input input-field" type="text" name="steamdeck_path" placeholder="retrodeck path" value="{{ config.get('steamdeck_retrodeck_path', '') }}">                      
+                        <div class="field">                    
+                            <div class="list has-hoverable-list-items">
+                                {% for collection in collections %}
+                                <div class="list-item">
+                                    <input type="hidden" name="collections_id" value="{{ collection.collections_id }}">
+                                    <div class="list-item-content">
+                                        <div class="list-item-title">
+                                            <label class="checkbox">
+                                                <input type="checkbox" name="collection_sync_{{ collection.collections_id }}" 
+                                                       value="{{ collection.collection_sync }}" {% if collection.collection_sync %}checked{% endif %} />
+                                                <span class="ml-2">
+                                                    <span class="icon-text">
+                                                        <span class="icon"><i class="fa-solid fa-folder"></i></span>
+                                                        <span>{{ collection.name }}</span>
+                                                    </span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="list-item-description">
+                                            {% if collection.collection_sync %}
+                                            <span class="tag is-success is-light is-small">
+                                                <span class="icon"><i class="fa-solid fa-check"></i></span>
+                                                <span>Enabled</span>
+                                            </span>
+                                            {% else %}
+                                            <span class="tag is-light is-small">
+                                                <span class="icon"><i class="fa-solid fa-xmark"></i></span>
+                                                <span>Disabled</span>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div> 
+                                {% endfor %}                           
+                            </div>
                         </div>
+                        
                         <div class="control">
-                          <button class="button is-primary" type="submit">
-                            Set
-                          </button>
-                        </div>
-                      </div>
-                      </form>
-                    </div>
-
-                    <table class="table is-fullwidth">
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>RomM Platform Name</th>                      
-                          <th>Platform Folder Steamdeck</th>                      
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for platform in platform_matching %}
-                        <form method="post" action="{{ url_for('config_platform_matching') }}">
-                        <tr>
-                          <th class="cell">{{ platform.romm_platform_id }}</th>                      
-                          <td class="cell">{{ platform.romm_platform_name }}</td>
-                          <td>
-                            <!-- <div class="select">
-                              <select value="{{ platform.steamdeck_platform_name }}">
-                                <option>psx</option>
-                                <option>ps2</option>
-                              </select>
-                            </div> -->
-                            <input type="text" hidden name="romm_platform_id" value="{{ platform.romm_platform_id }}">
-                            <input class="input input-field" type="text" name="steamdeck_platform_name" placeholder="steamdeck-platform" value="{{ platform.steamdeck_platform_name }}">
-                          </td>
-                          <td>
                             <button class="button is-primary" type="submit">
-                              Save
+                                <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
+                                <span>Save Collections</span>
                             </button>
-                          </td>
-                        </tr>                        
-                        </form>
-                        {% endfor %}                        
-                      </tbody>
-                    </table>                         
-                  </div>
-                </div>                                           
-
-                <!-- ALT -->                
-                <!-- {% for key, value in config.items() %}
-                <div class="field">
-                    <label class="label">{{ key }}</label>
-                    <div class="control">
-                        <input class="input" type="text" name="{{ key }}" value="{{ value }}">
-                    </div>
+                        </div>
+                    </form>
                 </div>
-                {% endfor %}
-                <div class="control">
-                    <button class="button is-primary" type="submit">Speichern</button>
-                </div> -->            
+            </div>
+            
+            <!-- Platform Matching Card -->
+            <h1 class="title custom-title">
+                <span class="icon"><i class="fa-solid fa-gamepad"></i></span>
+                Platform Matching
+            </h1>
+            <div class="card has-background-dark">                  
+                <div class="card-content">
+                    <div class="content">
+                        <label class="label">
+                            <span class="icon-text">
+                                <span class="icon"><i class="fa-solid fa-folder-tree"></i></span>
+                                <span>Steam Deck System Path</span>
+                            </span>
+                        </label>
+                        <form method="post" action="{{ url_for('config_steamdeck_platform_path') }}" id="steamdeck-path-form">
+                            <div class="field has-addons">                  
+                                <div class="control is-expanded has-icons-left">
+                                    <input class="input" type="text" name="steamdeck_path" id="steamdeck-path-input"
+                                           placeholder="/path/to/retrodeck/roms" 
+                                           value="{{ config.get('steamdeck_retrodeck_path', '') }}" required>
+                                    <span class="icon is-left">
+                                        <i class="fa-solid fa-folder-open"></i>
+                                    </span>
+                                </div>
+                                <div class="control">
+                                    <button class="button is-info" type="button" id="browse-steamdeck-path">
+                                        <span class="icon"><i class="fa-solid fa-folder-open"></i></span>
+                                        <span>Browse</span>
+                                    </button>
+                                </div>
+                                <div class="control">
+                                    <button class="button is-primary" type="submit">
+                                        <span class="icon"><i class="fa-solid fa-check"></i></span>
+                                        <span>Set Path</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="help">Base path to your RetroDECK roms directory (click Browse to select folder)</p>
+                        </form>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th><span class="icon-text"><span class="icon"><i class="fa-solid fa-hashtag"></i></span><span>ID</span></span></th>
+                                    <th><span class="icon-text"><span class="icon"><i class="fa-solid fa-server"></i></span><span>RomM Platform</span></span></th>                      
+                                    <th><span class="icon-text"><span class="icon"><i class="fa-solid fa-gamepad"></i></span><span>Steam Deck Folder</span></span></th>                      
+                                    <th><span class="icon-text"><span class="icon"><i class="fa-solid fa-gears"></i></span><span>Action</span></span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for platform in platform_matching %}
+                                <tr>
+                                    <form method="post" action="{{ url_for('config_platform_matching') }}" class="platform-form">
+                                        <th class="is-vcentered">{{ platform.romm_platform_id }}</th>                      
+                                        <td class="is-vcentered">
+                                            <span class="icon-text">
+                                                <span class="icon has-text-info"><i class="fa-solid fa-circle"></i></span>
+                                                <span>{{ platform.romm_platform_name }}</span>
+                                            </span>
+                                        </td>
+                                        <td class="is-vcentered">
+                                            <input type="text" hidden name="romm_platform_id" value="{{ platform.romm_platform_id }}">
+                                            <div class="control has-icons-left">
+                                                <input class="input is-small" type="text" name="steamdeck_platform_name" 
+                                                       placeholder="e.g., psx, n64, gba" 
+                                                       value="{{ platform.steamdeck_platform_name }}" 
+                                                       pattern="[a-zA-Z0-9_-]+" title="Only letters, numbers, hyphens, and underscores allowed">
+                                                <span class="icon is-small is-left">
+                                                    <i class="fa-solid fa-folder"></i>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="is-vcentered">
+                                            <button class="button is-primary is-small" type="submit">
+                                                <span class="icon"><i class="fa-solid fa-floppy-disk"></i></span>
+                                                <span>Save</span>
+                                            </button>
+                                        </td>
+                                    </form>
+                                </tr>                        
+                                {% endfor %}                        
+                            </tbody>
+                        </table>
+                    </div>                         
+                </div>
+            </div>
         </div>
     </section>
+
+    <!-- Hidden file input for folder selection -->
+    <input type="file" id="folder-picker" webkitdirectory directory multiple style="display: none;">
+
+    <script>
+        // Folder picker functionality with cross-browser support
+        const folderPicker = document.getElementById('folder-picker');
+        const steamdeckPathInput = document.getElementById('steamdeck-path-input');
+        const browseSteamdeckPath = document.getElementById('browse-steamdeck-path');
+
+        browseSteamdeckPath.addEventListener('click', async function() {
+            // Try modern File System Access API first (Chrome 86+, Edge 86+)
+            if ('showDirectoryPicker' in window) {
+                try {
+                    const dirHandle = await window.showDirectoryPicker({
+                        mode: 'read',
+                        startIn: 'documents'
+                    });
+                    
+                    // Construct the path from the directory handle
+                    // Note: Full path may not be available for security reasons
+                    // Users may need to manually adjust the path
+                    const dirName = dirHandle.name;
+                    
+                    // Try to get full path if available (may require permissions)
+                    let fullPath = '';
+                    try {
+                        // Some browsers provide a path property
+                        if (dirHandle.path) {
+                            fullPath = dirHandle.path;
+                        } else {
+                            // Fallback: ask user to verify path
+                            fullPath = prompt(
+                                'Selected folder: "' + dirName + '"\n\n' +
+                                'Please enter the full path to this folder:',
+                                steamdeckPathInput.value || '/home/deck/retrodeck/roms'
+                            );
+                            if (!fullPath) return; // User cancelled
+                        }
+                    } catch (e) {
+                        // Path not available, ask user
+                        fullPath = prompt(
+                            'Selected folder: "' + dirName + '"\n\n' +
+                            'Please enter the full path to this folder:',
+                            steamdeckPathInput.value || '/home/deck/retrodeck/roms'
+                        );
+                        if (!fullPath) return;
+                    }
+                    
+                    steamdeckPathInput.value = fullPath;
+                    showToast('Folder selected: ' + fullPath, 'success');
+                    
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Error selecting folder:', err);
+                        showToast('Error selecting folder. Please enter path manually.', 'error');
+                    }
+                }
+            } else {
+                // Fallback to traditional file input
+                folderPicker.click();
+            }
+        });
+
+        // Fallback for older browsers using webkitdirectory
+        folderPicker.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                const firstFile = this.files[0];
+                let path = firstFile.webkitRelativePath || firstFile.name;
+                const folderName = path.split('/')[0];
+                
+                // Check if we can access the full path
+                if (firstFile.path) {
+                    // Electron or local file access - use full path
+                    const fullPath = firstFile.path.substring(0, firstFile.path.lastIndexOf('/'));
+                    steamdeckPathInput.value = fullPath;
+                    showToast('Folder selected: ' + fullPath, 'success');
+                } else {
+                    // Browser context - prompt user for full path
+                    const fullPath = prompt(
+                        'Selected folder: "' + folderName + '"\n\n' +
+                        'For security reasons, browsers cannot access the full path.\n' +
+                        'Please enter the complete path to this folder:',
+                        steamdeckPathInput.value || '/home/deck/retrodeck/roms/' + folderName
+                    );
+                    
+                    if (fullPath) {
+                        steamdeckPathInput.value = fullPath;
+                        showToast('Path set to: ' + fullPath, 'success');
+                    }
+                }
+            }
+        });
+
+        // Keyboard shortcut: Ctrl/Cmd + O to open folder picker
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+                const activeElement = document.activeElement;
+                if (activeElement === steamdeckPathInput) {
+                    e.preventDefault();
+                    browseSteamdeckPath.click();
+                }
+            }
+        });
+
+        // Password toggle visibility
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password-input');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Form validation feedback
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const inputs = this.querySelectorAll('input[required]');
+                let isValid = true;
+                
+                inputs.forEach(input => {
+                    if (!input.validity.valid) {
+                        input.classList.add('is-danger');
+                        isValid = false;
+                    } else {
+                        input.classList.remove('is-danger');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    showToast('Please fill in all required fields correctly', 'error');
+                }
+            });
+        });
+
+        // Remove error styling on input
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-danger');
+            });
+        });
+
+        // Add loading state to submit buttons
+        document.querySelectorAll('button[type="submit"]').forEach(button => {
+            button.addEventListener('click', function() {
+                const form = this.closest('form');
+                if (form.checkValidity()) {
+                    this.classList.add('is-loading');
+                }
+            });
+        });
+    </script>
 {% endblock content %}

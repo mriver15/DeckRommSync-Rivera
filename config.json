@@ -6,5 +6,13 @@
     "database": {
         "name": "deckrommsync.db",
         "type": "sqlite"
+    },
+    "debug": {
+        "enabled": true,
+        "output_folder": "./debug_output"
+    },
+    "sync": {
+        "max_workers": 8,
+        "max_retries": 3
     }
 }

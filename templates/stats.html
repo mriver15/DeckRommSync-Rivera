@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">
+            <span class="icon"><i class="fa-solid fa-chart-line"></i></span>
+            Statistics Dashboard
+        </h1>
+
+        <!-- Summary Cards -->
+        <div class="columns is-multiline">
+            <!-- Total ROMs -->
+            <div class="column is-3">
+                <div class="card has-background-dark">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <span class="icon is-large has-text-info">
+                                    <i class="fa-solid fa-gamepad fa-2x"></i>
+                                </span>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4">{{ rom_stats.total }}</p>
+                                <p class="subtitle is-6">Total ROMs</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Synced ROMs -->
+            <div class="column is-3">
+                <div class="card has-background-dark">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <span class="icon is-large has-text-success">
+                                    <i class="fa-solid fa-circle-check fa-2x"></i>
+                                </span>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4">{{ rom_stats.synced }}</p>
+                                <p class="subtitle is-6">Synced</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending ROMs -->
+            <div class="column is-3">
+                <div class="card has-background-dark">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <span class="icon is-large has-text-warning">
+                                    <i class="fa-solid fa-spinner fa-2x"></i>
+                                </span>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4">{{ rom_stats.pending }}</p>
+                                <p class="subtitle is-6">Pending</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error ROMs -->
+            <div class="column is-3">
+                <div class="card has-background-dark">
+                    <div class="card-content">
+                        <div class="media">
+                            <div class="media-left">
+                                <span class="icon is-large has-text-danger">
+                                    <i class="fa-solid fa-circle-xmark fa-2x"></i>
+                                </span>
+                            </div>
+                            <div class="media-content">
+                                <p class="title is-4">{{ rom_stats.errors }}</p>
+                                <p class="subtitle is-6">Errors</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Rate and Disk Space -->
+        <div class="columns">
+            <div class="column is-6">
+                <div class="card has-background-dark">
+                    <div class="card-content">
+                        <p class="title is-5">
+                            <span class="icon"><i class="fa-solid fa-percent"></i></span>
+                            Overall Success Rate
+                        </p>
+                        <div class="level">
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="heading">Success Rate</p>
+                                    <p class="title">{{ success_rate }}%</p>
+                                </div>
+                            </div>
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="heading">Total Synced</p>
+                                    <p class="title">{{ total_synced }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <progress class="progress is-success" value="{{ success_rate }}" max="100">{{ success_rate }}%</progress>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-6">
+                <div class="card has-background-dark">
+                    <div class="card-content">
+                        <p class="title is-5">
+                            <span class="icon"><i class="fa-solid fa-hard-drive"></i></span>
+                            Estimated Disk Space
+                        </p>
+                        <div class="level">
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="heading">Total Size</p>
+                                    <p class="title">{{ disk_space.formatted }}</p>
+                                </div>
+                            </div>
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="heading">ROMs</p>
+                                    <p class="title">{{ disk_space.rom_count }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Platform Breakdown -->
+        <div class="card has-background-dark">
+            <div class="card-content">
+                <h2 class="title is-4">
+                    <span class="icon"><i class="fa-solid fa-layer-group"></i></span>
+                    Platform Breakdown
+                </h2>
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Platform</th>
+                                <th class="has-text-centered">Total</th>
+                                <th class="has-text-centered">Synced</th>
+                                <th class="has-text-centered">Pending</th>
+                                <th class="has-text-centered">Errors</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for platform in platform_breakdown %}
+                            <tr>
+                                <td>
+                                    <span class="icon-text">
+                                        <span class="icon has-text-info"><i class="fa-solid fa-gamepad"></i></span>
+                                        <span>{{ platform.name }}</span>
+                                    </span>
+                                </td>
+                                <td class="has-text-centered">{{ platform.total }}</td>
+                                <td class="has-text-centered has-text-success">{{ platform.synced }}</td>
+                                <td class="has-text-centered has-text-warning">{{ platform.pending }}</td>
+                                <td class="has-text-centered has-text-danger">{{ platform.errors }}</td>
+                                <td>
+                                    {% set progress = (platform.synced / platform.total * 100) if platform.total > 0 else 0 %}
+                                    <progress class="progress is-small is-success" value="{{ progress }}" max="100">{{ progress|round(1) }}%</progress>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not platform_breakdown %}
+                            <tr>
+                                <td colspan="6" class="has-text-centered">No platform data available</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection Stats -->
+        {% if collection_stats %}
+        <div class="card has-background-dark custom-title">
+            <div class="card-content">
+                <h2 class="title is-4">
+                    <span class="icon"><i class="fa-solid fa-folder-tree"></i></span>
+                    Collection Statistics
+                </h2>
+                <div class="columns is-multiline">
+                    {% for collection in collection_stats %}
+                    <div class="column is-4">
+                        <div class="box has-background-grey-dark">
+                            <p class="subtitle is-6">
+                                <span class="icon-text">
+                                    <span class="icon"><i class="fa-solid fa-folder"></i></span>
+                                    <span>{{ collection.name }}</span>
+                                    {% if collection.enabled %}
+                                    <span class="tag is-success is-light ml-2">Enabled</span>
+                                    {% else %}
+                                    <span class="tag is-light ml-2">Disabled</span>
+                                    {% endif %}
+                                </span>
+                            </p>
+                            <div class="level is-mobile">
+                                <div class="level-item has-text-centered">
+                                    <div>
+                                        <p class="heading">Total</p>
+                                        <p class="title is-6">{{ collection.total }}</p>
+                                    </div>
+                                </div>
+                                <div class="level-item has-text-centered">
+                                    <div>
+                                        <p class="heading">Synced</p>
+                                        <p class="title is-6 has-text-success">{{ collection.synced }}</p>
+                                    </div>
+                                </div>
+                                <div class="level-item has-text-centered">
+                                    <div>
+                                        <p class="heading">Pending</p>
+                                        <p class="title is-6 has-text-warning">{{ collection.pending }}</p>
+                                    </div>
+                                </div>
+                                <div class="level-item has-text-centered">
+                                    <div>
+                                        <p class="heading">Errors</p>
+                                        <p class="title is-6 has-text-danger">{{ collection.errors }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sync History -->
+        <div class="card has-background-dark custom-title">
+            <div class="card-content">
+                <h2 class="title is-4">
+                    <span class="icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                    Recent Sync History
+                </h2>
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th class="has-text-centered">Total ROMs</th>
+                                <th class="has-text-centered">Success</th>
+                                <th class="has-text-centered">Errors</th>
+                                <th class="has-text-centered">Skipped</th>
+                                <th class="has-text-centered">Success Rate</th>
+                                <th class="has-text-centered">Duration</th>
+                                <th class="has-text-centered">Mode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sync in sync_history %}
+                            <tr>
+                                <td>{{ sync.start_time_formatted }}</td>
+                                <td class="has-text-centered">{{ sync.total_roms }}</td>
+                                <td class="has-text-centered has-text-success">{{ sync.success_count }}</td>
+                                <td class="has-text-centered has-text-danger">{{ sync.error_count }}</td>
+                                <td class="has-text-centered">{{ sync.skipped_count }}</td>
+                                <td class="has-text-centered">
+                                    <span class="tag {% if sync.success_rate >= 90 %}is-success{% elif sync.success_rate >= 50 %}is-warning{% else %}is-danger{% endif %}">
+                                        {{ sync.success_rate }}%
+                                    </span>
+                                </td>
+                                <td class="has-text-centered">{{ sync.duration_seconds|round(1) }}s</td>
+                                <td class="has-text-centered">
+                                    {% if sync.debug_mode == 1 %}
+                                    <span class="tag is-info">Debug</span>
+                                    {% else %}
+                                    <span class="tag is-primary">Normal</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not sync_history %}
+                            <tr>
+                                <td colspan="8" class="has-text-centered">No sync history available yet. Syncs will appear here after the background worker runs.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if not sync_history %}
+        <div class="notification is-info">
+            <p><strong>No statistics available yet</strong></p>
+            <p>Statistics will be generated once the background worker completes its first sync run.</p>
+            <p>The background worker runs automatically every minute. Check back in a few minutes!</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock content %}

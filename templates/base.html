@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +8,32 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">   
           
     <style>   
-        .list{--be-list-color:var(--bulma-text);--be-list-item-description-color:var(--bulma-text-50);--be-list-item-divider-color:var(--bulma-border);--be-list-item-hover-color:var(--bulma-scheme-main-bis);--be-list-item-image-margin:.75em;--be-list-item-padding:.75em;--be-list-item-title-color:var(--bulma-text-strong);--be-list-item-title-weight:var(--bulma-weight-semibold);color:var(--be-list-color);flex-direction:column;display:flex}.list.has-hidden-images .list-item-image{display:none}.list.has-hoverable-list-items .list-item:hover{background-color:var(--be-list-item-hover-color)}.list.has-overflow-ellipsis .list-item-content{min-inline-size:0;max-inline-size:calc(var(--length)*1ch)}.list.has-overflow-ellipsis .list-item-content>*{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}@media (hover:hover){.list:not(.has-visible-pointer-controls) .list-item-controls{opacity:0;visibility:hidden}}.list .list-item{align-items:center;transition:background-color .125s ease-out;display:flex;position:relative}@media (hover:hover){.list .list-item:hover .list-item-controls,.list .list-item:focus-within .list-item-controls{opacity:initial;visibility:initial}}.list .list-item:not(.box){padding-block:var(--be-list-item-padding);padding-inline:var(--be-list-item-padding)}.list .list-item:not(:last-child):not(.box){border-block-end:1px solid var(--be-list-item-divider-color)}@media screen and (width<=768px){.list:not(.has-overflow-ellipsis) .list .list-item{flex-wrap:wrap}}.list .list-item-image{flex-shrink:0;margin-inline-end:var(--be-list-item-image-margin)}@media screen and (width<=768px){.list .list-item-image{padding-block:.5rem;padding-inline:0}}.list .list-item-content{flex-direction:column;flex-grow:1;display:flex}@media screen and (width<=768px){.list .list-item-content{padding-block:.5rem;padding-inline:0}}.list .list-item-title{color:var(--be-list-item-title-color);font-weight:var(--be-list-item-title-weight)}.list .list-item-description{color:var(--be-list-item-description-color)}.list .list-item-controls{flex-shrink:0;transition:opacity .125s ease-out}@media screen and (width<=768px){.list .list-item-controls{flex-wrap:wrap;padding-block:.5rem;padding-inline:0}}@media screen and (width>=769px),print{.list .list-item-controls{padding-inline-start:var(--be-list-item-padding)}.list:not(.has-visible-pointer-controls) .list .list-item-controls{block-size:100%;align-items:center;padding-block-end:var(--be-list-item-padding);display:flex;position:absolute;inset-inline-end:0}}
-/*# sourceMappingURL=bulma-list.css.map */  
+        /* Dark mode support */
+        :root {
+            --toast-bg: #48c78e;
+            --toast-error-bg: #f14668;
+            --toast-warning-bg: #ffe08a;
+            --toast-info-bg: #3e8ed0;
+        }
 
+        /* Light theme adjustments */
+        body.light-mode {
+            background-color: #f5f5f5;
+        }
+        
+        body.light-mode .card {
+            background-color: white !important;
+            color: #363636 !important;
+        }
+        
+        body.light-mode .navbar {
+            filter: brightness(0.95);
+        }
+
+        /* Bulma List Extension */
+        .list{--be-list-color:var(--bulma-text);--be-list-item-description-color:var(--bulma-text-50);--be-list-item-divider-color:var(--bulma-border);--be-list-item-hover-color:var(--bulma-scheme-main-bis);--be-list-item-image-margin:.75em;--be-list-item-padding:.75em;--be-list-item-title-color:var(--bulma-text-strong);--be-list-item-title-weight:var(--bulma-weight-semibold);color:var(--be-list-color);flex-direction:column;display:flex}.list.has-hidden-images .list-item-image{display:none}.list.has-hoverable-list-items .list-item:hover{background-color:var(--be-list-item-hover-color)}.list.has-overflow-ellipsis .list-item-content{min-inline-size:0;max-inline-size:calc(var(--length)*1ch)}.list.has-overflow-ellipsis .list-item-content>*{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}@media (hover:hover){.list:not(.has-visible-pointer-controls) .list-item-controls{opacity:0;visibility:hidden}}.list .list-item{align-items:center;transition:background-color .125s ease-out;display:flex;position:relative}@media (hover:hover){.list .list-item:hover .list-item-controls,.list .list-item:focus-within .list-item-controls{opacity:initial;visibility:initial}}.list .list-item:not(.box){padding-block:var(--be-list-item-padding);padding-inline:var(--be-list-item-padding)}.list .list-item:not(:last-child):not(.box){border-block-end:1px solid var(--be-list-item-divider-color)}@media screen and (width<=768px){.list:not(.has-overflow-ellipsis) .list .list-item{flex-wrap:wrap}}.list .list-item-image{flex-shrink:0;margin-inline-end:var(--be-list-item-image-margin)}@media screen and (width<=768px){.list .list-item-image{padding-block:.5rem;padding-inline:0}}.list .list-item-content{flex-direction:column;flex-grow:1;display:flex}@media screen and (width<=768px){.list .list-item-content{padding-block:.5rem;padding-inline:0}}.list .list-item-title{color:var(--be-list-item-title-color);font-weight:var(--be-list-item-title-weight)}.list .list-item-description{color:var(--be-list-item-description-color)}.list .list-item-controls{flex-shrink:0;transition:opacity .125s ease-out}@media screen and (width<=768px){.list .list-item-controls{flex-wrap:wrap;padding-block:.5rem;padding-inline:0}}@media screen and (width>=769px),print{.list .list-item-controls{padding-inline-start:var(--be-list-item-padding)}.list:not(.has-visible-pointer-controls) .list .list-item-controls{block-size:100%;align-items:center;padding-block-end:var(--be-list-item-padding);display:flex;position:absolute;inset-inline-end:0}}
+
+        /* Status Icons */
         .icon-in-progess {
             color: #FFB70F;
         }
@@ -53,6 +76,163 @@
         .collapse {
             display: none;
         }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+        
+        .toast {
+            background-color: var(--toast-bg);
+            color: white;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .toast.error {
+            background-color: var(--toast-error-bg);
+        }
+        
+        .toast.warning {
+            background-color: var(--toast-warning-bg);
+            color: #363636;
+        }
+        
+        .toast.info {
+            background-color: var(--toast-info-bg);
+        }
+        
+        .toast .delete {
+            margin-left: 1rem;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        /* Loading States */
+        .is-loading-custom {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        
+        .is-loading-custom::after {
+            animation: spinAround 500ms infinite linear;
+            border: 2px solid #dbdbdb;
+            border-radius: 290486px;
+            border-right-color: transparent;
+            border-top-color: transparent;
+            content: "";
+            display: block;
+            height: 1em;
+            width: 1em;
+            position: absolute;
+            left: calc(50% - 0.5em);
+            top: calc(50% - 0.5em);
+        }
+        
+        @keyframes spinAround {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(359deg); }
+        }
+
+        /* Search and Filter */
+        .search-box {
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-buttons {
+            margin-bottom: 1rem;
+        }
+        
+        .filter-buttons .button {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Improved Responsive */
+        @media screen and (max-width: 768px) {
+            .toast-container {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            
+            .navbar-item {
+                padding: 0.5rem 0.75rem;
+            }
+        }
+
+        /* Smooth transitions */
+        .card, .button, .notification {
+            transition: all 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(10, 10, 10, 0.2);
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Badge for sync stats */
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-success {
+            background-color: #48c78e;
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: #ffe08a;
+            color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .badge-danger {
+            background-color: #f14668;
+            color: white;
+        }
     </style>
 </head>
 <body>        
@@ -72,19 +252,149 @@
 
         <div id="navbarMenu" class="navbar-menu">
             <div class="navbar-start">
-                <a class="navbar-item" href="/">Status</a>                
-                <a class="navbar-item" href="/config">Config</a>
-                <a class="navbar-item" href="/log">Logging</a>
+                <a class="navbar-item" href="/">
+                    <span class="icon"><i class="fa-solid fa-gauge"></i></span>
+                    <span>Status</span>
+                </a>
+                <a class="navbar-item" href="/stats">
+                    <span class="icon"><i class="fa-solid fa-chart-line"></i></span>
+                    <span>Statistics</span>
+                </a>
+                <a class="navbar-item" href="/config">
+                    <span class="icon"><i class="fa-solid fa-gear"></i></span>
+                    <span>Config</span>
+                </a>
+                <a class="navbar-item" href="/log">
+                    <span class="icon"><i class="fa-solid fa-file-lines"></i></span>
+                    <span>Logs</span>
+                </a>
+            </div>
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <button class="button is-light" id="theme-toggle" title="Toggle dark/light mode">
+                        <span class="icon">
+                            <i class="fa-solid fa-moon" id="theme-icon"></i>
+                        </span>
+                    </button>
+                </div>
             </div>            
         </div>
     </nav>    
 
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <!-- Main Content -->
     <section class="section">
+        <!-- Flash Messages (converted to toasts) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div style="display: none;" id="flash-messages">
+                    {% for category, message in messages %}
+                        <div data-category="{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
         <!-- <div class="container"> -->
             {% block content %}
             {% endblock content %}
         <!-- </div> -->
-    </section>    
+    </section>
+    
+    <script>
+        // Toast Notification System
+        function showToast(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? 'fa-circle-check' : 
+                        type === 'error' ? 'fa-circle-xmark' : 
+                        type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="icon"><i class="fa-solid ${icon}"></i></span>
+                    <span>${message}</span>
+                </div>
+                <button class="delete"></button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto dismiss
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+            
+            // Manual dismiss
+            toast.querySelector('.delete').addEventListener('click', () => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            });
+        }
+
+        // Dark Mode Toggle
+        function initThemeToggle() {
+            const toggle = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            
+            if (currentTheme === 'light') {
+                document.body.classList.add('light-mode');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+            
+            toggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                const isLight = document.body.classList.contains('light-mode');
+                
+                if (isLight) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    localStorage.setItem('theme', 'light');
+                    showToast('Light mode enabled', 'info', 2000);
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                    localStorage.setItem('theme', 'dark');
+                    showToast('Dark mode enabled', 'info', 2000);
+                }
+            });
+        }
+
+        // Navbar burger toggle
+        function initNavbar() {
+            const burger = document.querySelector('.navbar-burger');
+            const menu = document.getElementById('navbarMenu');
+            
+            if (burger && menu) {
+                burger.addEventListener('click', () => {
+                    burger.classList.toggle('is-active');
+                    menu.classList.toggle('is-active');
+                });
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initThemeToggle();
+            initNavbar();
+            
+            // Convert flash messages to toasts
+            const flashMessages = document.getElementById('flash-messages');
+            if (flashMessages) {
+                flashMessages.querySelectorAll('div[data-category]').forEach(msg => {
+                    const category = msg.getAttribute('data-category');
+                    const message = msg.textContent;
+                    showToast(message, category, 5000);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

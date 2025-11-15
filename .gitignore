@@ -1,7 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
 system.log
-.vscode/settings.json
 background_worker.log
-test.py
-tests/*
-output/*
 TEST_background_worker.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Debug & Test Output
+debug_output/
+debug_output_sample/
+output/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Configuration (contains sensitive data)
+config.json
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Test files
+test.py
+
