@@ -8,7 +8,7 @@
         "type": "sqlite"
     },
     "debug": {
-        "enabled": true,
+        "enabled": false,
         "output_folder": "./debug_output"
     },
     "sync": {
