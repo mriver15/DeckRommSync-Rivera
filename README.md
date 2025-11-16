@@ -13,6 +13,7 @@ Sync your ROM collection from RomM server to Steam Deck with intelligent platfor
 ## ⚡ Quick Start
 
 ### 1. Install
+
 ```bash
 git clone https://github.com/mriver15/DeckRommSync-Rivera.git
 cd DeckRommSync-Rivera
@@ -21,11 +22,14 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure
+### 2. Start & Configure
+
 ```bash
 python app.py
-# Open http://localhost:5000 in browser
+# Open http://localhost:5000/config in browser
 ```
+
+**First Run:** Database automatically initialized with all required tables.
 
 **Config Page:**
 - RomM API URL: `http://your-romm-server:8080/api`
@@ -34,6 +38,7 @@ python app.py
 - Collections: Enable collections to sync
 
 ### 3. Sync
+
 Click **Sync Now** on Status page or wait for automatic sync (runs every minute)
 
 ---

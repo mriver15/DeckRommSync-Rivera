@@ -36,8 +36,54 @@ def load_json_config(file_path="config.json"):
             return json.load(f)
     return {}
 
+def initialize_database(db_name: str = "deckrommsync.db"):
+    """
+    Initialize database with all required tables and default configuration.
+    Runs automatically on first app startup.
+    """
+    try:
+        # Create database connection (this triggers _init_database() which creates tables)
+        db = DeckRommSyncDatabase(db_name)
+        
+        # Check if config table has default values
+        config_count = len(db.select('config'))
+        if config_count == 0:
+            print("First run detected - initializing default configuration...")
+            
+            default_configs = [
+                ('romm_api_base_url', ''),
+                ('romm_username', ''),
+                ('romm_password', ''),
+                ('steamdeck_retrodeck_path', '/home/deck/retrodeck/roms'),
+                ('use_oauth', '0'),
+                ('oauth_scopes', 'platforms.read,roms.read,collections.read,assets.read,assets.write'),
+                ('enable_save_sync', '1'),
+                ('enable_state_sync', '0'),
+            ]
+            
+            for key, value in default_configs:
+                db.insert('config', ['config_key', 'config_value'], (key, value))
+            
+            print(f"✓ Database initialized with {len(default_configs)} default configuration entries")
+            print()
+            print("⚠️  Next steps:")
+            print("   1. Open http://localhost:5000/config in your browser")
+            print("   2. Configure your RomM API URL, username, and password")
+            print("   3. Enable collections to sync")
+            print("   4. Click 'Sync Now' to start syncing")
+            print()
+        
+        return True
+    except Exception as e:
+        system_logger.error(f"Database initialization failed: {e}")
+        print(f"❌ Error initializing database: {e}")
+        return False
+
 # Initialize app_config at module level
 app_config = load_json_config()
+
+# Initialize database on startup (creates tables and default config if needed)
+initialize_database(app_config.get("database", {}).get("name", "deckrommsync.db"))
 
 # Global sync status tracking
 sync_status = {

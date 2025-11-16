@@ -2,8 +2,8 @@
 """
 Database Initialization Script for DeckRommSync-Rivera
 
-This script initializes the database with all required tables.
-Run this when setting up DeckRommSync on a new device.
+NOTE: This script is OPTIONAL. The app automatically initializes the database
+on first run. Use this only if you need to manually reset or initialize the database.
 
 Usage:
     python init_database.py
