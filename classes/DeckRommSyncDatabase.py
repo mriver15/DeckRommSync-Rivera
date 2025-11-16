@@ -15,12 +15,56 @@ class DeckRommSyncDatabase:
     def _init_database(self):
         """
         Initialize database with Write-Ahead Logging (WAL) for better concurrency.
-        Also creates the saves and states tables if they don't exist.
+        Creates all required tables if they don't exist.
         """
         with self._get_connection() as conn:
             # Enable WAL mode for better concurrent access
             conn.execute("PRAGMA journal_mode=WAL")
             conn.commit()
+            
+            # Create config table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS config (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    config_key TEXT UNIQUE NOT NULL,
+                    config_value TEXT
+                )
+            """)
+            
+            # Create collections table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS collections (
+                    collections_id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    rom_count INTEGER,
+                    cover TEXT,
+                    collection_sync INTEGER DEFAULT 0
+                )
+            """)
+            
+            # Create roms table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS roms (
+                    roms_id INTEGER PRIMARY KEY,
+                    collections_id INTEGER,
+                    name TEXT,
+                    url_cover TEXT,
+                    filename TEXT,
+                    platform_fs_slug TEXT,
+                    platform_id INTEGER,
+                    sync_status INTEGER DEFAULT 0,
+                    FOREIGN KEY (collections_id) REFERENCES collections(collections_id)
+                )
+            """)
+            
+            # Create platforms_matching table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS platforms_matching (
+                    romm_platform_id INTEGER PRIMARY KEY,
+                    romm_platform_name TEXT,
+                    steamdeck_platform_name TEXT
+                )
+            """)
             
             # Create rom_saves table if it doesn't exist
             conn.execute("""
@@ -170,6 +214,18 @@ class DeckRommSyncDatabase:
         query = f"UPDATE {table} SET {set_clause} WHERE {condition}"
         values = tuple(updates.values()) + condition_values
         self.execute_query(query, values)
+    
+    def delete(self, table: str, condition: str = '1=1', condition_values: Tuple = ()) -> None:
+        """
+        Executes a DELETE in the database.
+        
+        Args:
+            table: Table name
+            condition: WHERE clause condition (default: '1=1' to delete all)
+            condition_values: Values for the WHERE clause
+        """
+        query = f"DELETE FROM {table} WHERE {condition}"
+        self.execute_query(query, condition_values)
     
     def fetch_query(self, query: str, params: Tuple = ()) -> List[Tuple]:
         """

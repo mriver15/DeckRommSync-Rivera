@@ -278,13 +278,39 @@ class BackgroundWorker:
                             if not filename:
                                 self.background_logger.warning(f"ROM {rom_id} has no filename, skipping")
                                 continue
+                            
+                            # Get cover image URL - RomM v3+ uses different field names than older versions
+                            # Try multiple sources in order of preference
+                            cover_url = ''
+                            base_url = self.romMAPIBaseUrl.replace('/api', '')
+                            
+                            # Try different cover image fields (RomM API variations)
+                            if romObj.get('path_cover_l'):
+                                cover_url = f"{base_url}{romObj['path_cover_l']}"
+                            elif romObj.get('path_cover_s'):
+                                cover_url = f"{base_url}{romObj['path_cover_s']}"
+                            elif romObj.get('url_cover'):
+                                cover_url = romObj['url_cover']
+                            elif romObj.get('cover_path'):
+                                cover_url = f"{base_url}{romObj['cover_path']}"
+                            elif romObj.get('cover'):
+                                # Some RomM versions return just 'cover' field
+                                cover_path = romObj['cover']
+                                if cover_path and not cover_path.startswith('http'):
+                                    cover_url = f"{base_url}{cover_path}"
+                                else:
+                                    cover_url = cover_path or ''
+                            
+                            # Log if no cover found for debugging
+                            if not cover_url:
+                                self.background_logger.debug(f"No cover image found for ROM {rom_id} ({romObj.get('name', 'unknown')})")
                                          
                             # Insert ROM (using insert_or_replace to handle duplicates)
                             db.insert_or_replace("roms", ["roms_id", "collections_id", "name", "url_cover", "filename", "platform_fs_slug", "platform_id"],
                                                (romObj['id'],
                                                collection['id'],
                                                romObj['name'],
-                                               romObj.get('url_cover', ''),
+                                               cover_url,
                                                filename,
                                                romObj.get('platform_fs_slug', ''),
                                                romObj.get('platform_id', 0)))

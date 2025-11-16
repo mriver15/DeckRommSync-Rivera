@@ -125,7 +125,11 @@
                             <div class="card has-background-dark">
                                 <div class="card-image">
                                     <figure class="image is-2by3">
-                                        <img src="{{ rom.url_cover }}" alt="{{ rom.name }}" loading="lazy" onerror="this.src='https://bulma.io/assets/images/placeholders/480x320.png'" style="object-fit: cover;">
+                                        {% if rom.url_cover %}
+                                        <img src="{{ rom.url_cover }}" alt="{{ rom.name }}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23363636%22 width=%22200%22 height=%22300%22/%3E%3Ctext fill=%22%23888%22 font-family=%22sans-serif%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E'" style="object-fit: cover;">
+                                        {% else %}
+                                        <img src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23363636%22 width=%22200%22 height=%22300%22/%3E%3Ctext fill=%22%23888%22 font-family=%22sans-serif%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E" alt="{{ rom.name }}" style="object-fit: cover;">
+                                        {% endif %}
                                     </figure>
                                     <div class="status-badge status-{{ rom.sync_status }}">
                                         {% if rom.sync_status == 0 %}
@@ -169,7 +173,11 @@
                                 <div class="columns is-mobile is-vcentered">
                                     <div class="column is-narrow">
                                         <figure class="image is-48x64">
-                                            <img src="{{ rom.url_cover }}" alt="{{ rom.name }}" loading="lazy" onerror="this.src='https://bulma.io/assets/images/placeholders/64x64.png'" style="object-fit: cover; border-radius: 4px;">
+                                            {% if rom.url_cover %}
+                                            <img src="{{ rom.url_cover }}" alt="{{ rom.name }}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2264%22%3E%3Crect fill=%22%23363636%22 width=%2248%22 height=%2264%22/%3E%3Ctext fill=%22%23888%22 font-size=%2224%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E'" style="object-fit: cover; border-radius: 4px;">
+                                            {% else %}
+                                            <img src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2264%22%3E%3Crect fill=%22%23363636%22 width=%2248%22 height=%2264%22/%3E%3Ctext fill=%22%23888%22 font-size=%2224%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E" alt="{{ rom.name }}" style="object-fit: cover; border-radius: 4px;">
+                                            {% endif %}
                                         </figure>
                                     </div>
                                     <div class="column">
@@ -225,7 +233,11 @@
                                         <td>
                                             <div class="is-flex is-align-items-center">
                                                 <figure class="image is-24x32 mr-2">
-                                                    <img src="{{ rom.url_cover }}" alt="{{ rom.name }}" loading="lazy" style="border-radius: 4px; object-fit: cover;">
+                                                    {% if rom.url_cover %}
+                                                    <img src="{{ rom.url_cover }}" alt="{{ rom.name }}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2232%22%3E%3Crect fill=%22%23363636%22 width=%2224%22 height=%2232%22/%3E%3Ctext fill=%22%23888%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E'" style="border-radius: 4px; object-fit: cover;">
+                                                    {% else %}
+                                                    <img src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2232%22%3E%3Crect fill=%22%23363636%22 width=%2224%22 height=%2232%22/%3E%3Ctext fill=%22%23888%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E" alt="{{ rom.name }}" style="border-radius: 4px; object-fit: cover;">
+                                                    {% endif %}
                                                 </figure>
                                                 <span class="rom-name-compact">{{ rom.name }}</span>
                                             </div>
